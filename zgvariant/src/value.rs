@@ -32,10 +32,17 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use zgvariant::Value;
+/// use zgvariant::{to_bytes, serialized::Context, Value, LE};
 ///
 /// // Create a Value from an i16
 /// let v = Value::new(i16::max_value());
+///
+/// // Encode it
+/// let ctxt = Context::new(LE, 0);
+/// let encoding = to_bytes(ctxt, &v).unwrap();
+///
+/// // Decode it back
+/// let v: Value = encoding.deserialize().unwrap().0;
 ///
 /// // Check everything is as expected
 /// assert_eq!(i16::try_from(&v).unwrap(), i16::max_value());
@@ -44,10 +51,16 @@ use crate::{
 /// Now let's try a more complicated example:
 ///
 /// ```
+/// use zgvariant::{to_bytes, serialized::Context, LE};
 /// use zgvariant::{Structure, Value, Str};
 ///
 /// // Create a Value from a tuple this time
 /// let v = Value::new((i16::max_value(), "hello", true));
+///
+/// // Same drill as previous example
+/// let ctxt = Context::new(LE, 0);
+/// let encoding = to_bytes(ctxt, &v).unwrap();
+/// let v: Value = encoding.deserialize().unwrap().0;
 ///
 /// // Check everything is as expected
 /// let s = Structure::try_from(v).unwrap();

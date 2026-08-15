@@ -23,11 +23,18 @@ pub use basic::*;
 mod dict;
 pub use dict::*;
 
+pub mod serialized;
+
 mod object_path;
 pub use crate::object_path::*;
 
 mod file_path;
 pub use crate::file_path::*;
+
+mod ser;
+pub use ser::*;
+
+mod de;
 
 pub mod signature;
 pub use signature::Signature;
@@ -63,6 +70,11 @@ mod into_value;
 
 mod owned_value;
 pub use owned_value::*;
+
+mod framing_offset_size;
+mod framing_offsets;
+
+mod container_depths;
 
 pub mod as_value;
 

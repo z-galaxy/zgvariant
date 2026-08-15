@@ -9,6 +9,17 @@ use crate::{Signature, Type};
 ///
 /// When the type of a value is well-known, you may avoid the cost and complexity of wrapping to a
 /// generic [`enum@crate::Value`] and instead use this wrapper.
+///
+/// ```
+/// # use zgvariant::{to_bytes, serialized::Context, as_value::{Deserialize, Serialize}, LE};
+/// #
+/// # let ctxt = Context::new(LE, 0);
+/// # let array = [0, 1, 2];
+/// # let v = Serialize(&array);
+/// # let encoded = to_bytes(ctxt, &v).unwrap();
+/// let decoded: Deserialize<[u8; 3]> = encoded.deserialize().unwrap().0;
+/// # assert_eq!(decoded.0, array);
+/// ```
 pub struct Deserialize<'de, T: Type + serde::Deserialize<'de>>(
     pub T,
     std::marker::PhantomData<&'de T>,

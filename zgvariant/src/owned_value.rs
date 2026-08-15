@@ -280,7 +280,7 @@ impl Clone for OwnedValue {
 mod tests {
     use std::{collections::HashMap, error::Error};
 
-    use crate::{OwnedValue, Value};
+    use crate::{LE, OwnedValue, Value, serialized::Context, to_bytes};
 
     #[cfg(feature = "enumflags2")]
     #[test]
@@ -304,6 +304,17 @@ mod tests {
         let v = Value::from("hi!");
         let ov: OwnedValue = v.try_into()?;
         assert_eq!(<&str>::try_from(&ov)?, "hi!");
+        Ok(())
+    }
+
+    #[test]
+    fn serde() -> Result<(), Box<dyn Error>> {
+        let ec = Context::new(LE, 0);
+        let ov: OwnedValue = Value::from("hi!").try_into()?;
+        let ser = to_bytes(ec, &ov)?;
+        let (de, parsed): (Value<'_>, _) = ser.deserialize()?;
+        assert_eq!(<&str>::try_from(&de)?, "hi!");
+        assert_eq!(parsed, ser.len());
         Ok(())
     }
 

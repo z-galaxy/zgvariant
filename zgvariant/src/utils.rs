@@ -30,6 +30,7 @@ pub const VARIANT_SIGNATURE_STR: &str = "v";
 pub const MAYBE_SIGNATURE_CHAR: char = 'm';
 /// The prefix of MAYBE type signature, as a string. Provided for manual signature creation.
 pub const MAYBE_SIGNATURE_STR: &str = "m";
+pub(crate) const VARIANT_ALIGNMENT_GVARIANT: usize = 8;
 
 /// Calculates the padding needed to align `value` to the next multiple of `align`.
 ///
@@ -49,4 +50,12 @@ pub fn padding_for_n_bytes(value: usize, align: usize) -> usize {
     let len_rounded_up = value.wrapping_add(align).wrapping_sub(1) & !align.wrapping_sub(1);
 
     len_rounded_up.wrapping_sub(value)
+}
+
+/// Slice the given slice of bytes safely and return an error if the slice is too small.
+pub(crate) fn subslice<I, T>(input: &[T], index: I) -> crate::Result<&I::Output>
+where
+    I: std::slice::SliceIndex<[T]>,
+{
+    input.get(index).ok_or(crate::Error::OutOfBounds)
 }

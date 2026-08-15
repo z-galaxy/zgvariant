@@ -52,14 +52,23 @@ where
 /// # Examples
 ///
 /// ```
-/// use zgvariant::Optional;
+/// use zgvariant::{serialized::Context, Optional, to_bytes, LE};
 ///
 /// // `Null` case.
+/// let ctxt = Context::new(LE, 0);
 /// let s = Optional::<&str>::default();
+/// let encoded = to_bytes(ctxt, &s).unwrap();
+/// // The empty string encodes as just the trailing nul byte in GVariant.
+/// assert_eq!(encoded.bytes(), &[0]);
+/// let s: Optional<&str> = encoded.deserialize().unwrap().0;
 /// assert_eq!(*s, None);
 ///
 /// // `Some` case.
 /// let s = Optional::from(Some("hello"));
+/// let encoded = to_bytes(ctxt, &s).unwrap();
+/// // No length prefix in GVariant, just the UTF-8 bytes plus a nul terminator.
+/// assert_eq!(encoded.len(), 6);
+/// let s: Optional<&str> = encoded.deserialize().unwrap().0;
 /// assert_eq!(*s, Some("hello"));
 /// ```
 ///
@@ -146,5 +155,24 @@ impl<T> DerefMut for Optional<T> {
 impl<T> Default for Optional<T> {
     fn default() -> Self {
         Self(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::panic::catch_unwind;
+
+    #[test]
+    fn bool_in_optional() {
+        // Ensure trying to encode/decode `bool` in `Optional` fails.
+        use crate::{LE, Optional, to_bytes};
+
+        let ctxt = crate::serialized::Context::new(LE, 0);
+        let res = catch_unwind(|| to_bytes(ctxt, &Optional::<bool>::default()));
+        assert!(res.is_err());
+
+        let data = crate::serialized::Data::new([0, 0, 0, 0].as_slice(), ctxt);
+        let res = catch_unwind(|| data.deserialize::<Optional<bool>>());
+        assert!(res.is_err());
     }
 }
