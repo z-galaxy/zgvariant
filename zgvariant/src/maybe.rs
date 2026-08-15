@@ -149,7 +149,7 @@ pub(crate) fn maybe_display_fmt(
         // There are no Nothings, so print out the inner value with no prefixes.
         value_display_fmt(last_inner, f, false)?;
     } else {
-        // One of the maybes was Nothing, so print out the right number of justs.
+        // One of the maybes was Nothing, so print out the right number of `just` occurrences.
         for _ in 0..depth {
             f.write_str("just ")?;
         }

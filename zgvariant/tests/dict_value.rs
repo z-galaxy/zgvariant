@@ -283,7 +283,7 @@ fn nested_dict_value() {
     }
 
     let media = Media {
-        // The UUIDs aren't value but it doens't matter for this test.
+        // The UUIDs aren't value but it doesn't matter for this test.
         supported_uuids: vec!["001-233-22333".to_string(), "222-222-222".to_string()],
         supported_features: vec!["tx-timestamping".to_string()],
     };

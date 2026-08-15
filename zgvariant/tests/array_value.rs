@@ -117,7 +117,7 @@ fn array_value() {
     let a: Array<'_> = v.try_into().unwrap();
     let _ve: Vec<String> = a.try_into().unwrap();
 
-    // Array of Struct, which in turn containin an Array (We gotta go deeper!)
+    // Array of Struct, which in turn contains an Array (We gotta go deeper!)
     // Signature: "a(yu(xbxas)s)");
     let ar = vec![(
         // top-most simple fields
