@@ -1,1 +1,54 @@
-//! Serde-based GVariant encoding & decoding.
+#![allow(clippy::unusual_byte_groupings)]
+#![deny(rust_2018_idioms)]
+#![doc = include_str!("../README.md")]
+#![doc(test(attr(
+    warn(unused),
+    deny(warnings),
+    allow(dead_code),
+    // W/o this, we seem to get some bogus warning about `extern crate zgvariant`.
+    allow(unused_extern_crates),
+)))]
+#![cfg_attr(test, recursion_limit = "256")]
+
+#[macro_use]
+mod utils;
+pub use utils::*;
+
+mod basic;
+pub use basic::*;
+
+mod object_path;
+pub use crate::object_path::*;
+
+mod file_path;
+pub use crate::file_path::*;
+
+pub mod signature;
+pub use signature::Signature;
+
+mod str;
+pub use crate::str::*;
+
+mod error;
+pub use error::*;
+
+#[macro_use]
+mod r#type;
+pub use r#type::*;
+
+mod tuple;
+pub use tuple::*;
+
+pub use zgvariant_derive::{DeserializeDict, OwnedValue, SerializeDict, Type, Value, signature};
+
+// Required for the macros to function within this crate.
+extern crate self as zgvariant;
+
+// Macro support module, not part of the public API.
+#[doc(hidden)]
+pub mod export {
+    pub use serde;
+}
+
+// Re-export all of the `endi` API for ease of use.
+pub use endi::*;
