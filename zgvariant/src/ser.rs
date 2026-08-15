@@ -168,7 +168,7 @@ where
     where
         T: Basic,
     {
-        self.add_padding(T::alignment(Format::GVariant))?;
+        self.add_padding(T::alignment())?;
 
         Ok(())
     }
@@ -851,6 +851,7 @@ serialize_struct_anon_fields!(SerializeTuple serialize_element);
 serialize_struct_anon_fields!(SerializeTupleStruct serialize_field);
 serialize_struct_anon_fields!(SerializeTupleVariant serialize_field);
 
+#[doc(hidden)]
 pub struct MapSerializer<'ser, 'b, W> {
     seq: SeqSerializer<'ser, 'b, W>,
     key_signature: &'ser Signature,
