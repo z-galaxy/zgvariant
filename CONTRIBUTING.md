@@ -40,7 +40,7 @@ Same rules apply here as for bug reports and feature requests. Plus:
 * Add details to each commit about the changes it contains. PR description is for summarizing the
   overall changes in the PR, while commit logs are for describing the specific changes of the
   commit in question.
-* When addressesing review comments, fix the existing commits in the PR (rather than adding
+* When addressing review comments, fix the existing commits in the PR (rather than adding
   additional commits) and force push (as in `git push -f`) to your branch. You may find
   [`git-absorb`](https://github.com/tummychow/git-absorb) and
   [`git-revise`](https://github.com/mystor/git-revise) extremely useful, especially if you're not

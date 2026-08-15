@@ -17,10 +17,10 @@ use crate::Type;
 /// implement [`Default`] for convenience. Unfortunately, this means you can not implement this
 /// trait manually for types that implement [`Default`].
 ///
-/// Moreoever, since `bool` implements [`Default`], `NoneValue` gets implemented for `bool` as well.
+/// Moreover, since `bool` implements [`Default`], `NoneValue` gets implemented for `bool` as well.
 /// However, this is unsound since its not possible to distinguish between `false` and `None` in
 /// this case. This is why you'll get a panic on trying to serialize or deserialize an
-/// `Optionanl<bool>`.
+/// `Optional<bool>`.
 pub trait NoneValue {
     type NoneType;
 
@@ -41,10 +41,10 @@ where
 
 /// An optional value.
 ///
-/// Since D-Bus doesn't have the concept of nullability, it uses a special value (typically the
-/// default value) as the null value. For example [this signal][ts] uses empty strings for null
-/// values. Serde has built-in support for `Option` but unfortunately that doesn't work for us.
-/// Hence the need for this type.
+/// GLib-style APIs commonly signal absence of a value with a sentinel (typically the type's
+/// default value, e.g. an empty string) rather than with a `Maybe` wrapper. Serde's built-in
+/// `Option` support maps naturally to GVariant's `m` (maybe) type, not to that sentinel
+/// convention, so this type bridges the gap.
 ///
 /// The serialization and deserialization of `Optional` relies on [`NoneValue`] implementation of
 /// the underlying type.
@@ -71,8 +71,6 @@ where
 /// let s: Optional<&str> = encoded.deserialize().unwrap().0;
 /// assert_eq!(*s, Some("hello"));
 /// ```
-///
-/// [ts]: https://dbus.freedesktop.org/doc/dbus-specification.html#bus-messages-name-owner-changed
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Optional<T>(Option<T>);
 

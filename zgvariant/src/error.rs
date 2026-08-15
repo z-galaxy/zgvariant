@@ -48,7 +48,7 @@ pub enum Error {
     Utf8(std::str::Utf8Error),
     /// Non-0 padding byte(s) encountered.
     PaddingNot0(u8),
-    /// Missing framing offset at the end of a GVariant-encoded container,
+    /// Missing framing offset at the end of a GVariant-encoded container.
     MissingFramingOffset,
     /// The type (signature as argument) being (de)serialized is not supported by the GVariant
     /// format.

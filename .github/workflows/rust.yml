@@ -84,6 +84,7 @@ jobs:
           cargo --locked test
           # `--all-features` includes `ostree-tests`.
           cargo --locked test --all-features
+          cargo --locked bench --no-run
 
   windows_test:
     runs-on: windows-latest
