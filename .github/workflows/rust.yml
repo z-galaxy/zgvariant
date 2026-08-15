@@ -130,6 +130,24 @@ jobs:
       - name: Check documentation build
         run: cargo --locked doc --all-features
 
+  fuzz:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      RUST_LOG: trace
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@v2
+      - name: Fuzz zgvariant
+        run: |
+          cargo install cargo-fuzz
+          cargo --locked fuzz run --fuzz-dir zgvariant/fuzz gvariant -- \
+            -max_total_time=30 -max_len=100M
+
   semver-checks:
     runs-on: ubuntu-latest
     steps:

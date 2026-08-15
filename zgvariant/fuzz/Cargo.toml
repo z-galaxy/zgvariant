@@ -1,0 +1,25 @@
+[package]
+name = "zgvariant-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.7"
+endi = "1.1.0"
+
+[dependencies.zgvariant]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "gvariant"
+path = "fuzz_targets/gvariant.rs"
+test = false
+doc = false
