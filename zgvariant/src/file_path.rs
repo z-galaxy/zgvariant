@@ -88,8 +88,9 @@ impl<'f> From<&'f OsString> for FilePath<'f> {
 
 impl From<OsString> for FilePath<'_> {
     fn from(value: OsString) -> Self {
-        #[allow(deprecated)]
-        FilePath(vec_to_cstr(value.as_encoded_bytes().to_vec()))
+        FilePath(Cow::Owned(
+            bytes_with_null(value.as_encoded_bytes()).into_owned(),
+        ))
     }
 }
 
@@ -193,29 +194,6 @@ impl TryFrom<FilePath<'_>> for PathBuf {
     }
 }
 
-/// Converts a `Vec<u8>` into a null-terminated `CStr`.
-///
-/// Truncates the vector at the first null byte, if present. If no null byte exists, appends one to
-/// ensure proper termination.
-///
-/// # Returns
-///
-/// A `Cow<'_, CStr>` containing a *guaranteed* null-terminated string.
-#[doc(hidden)]
-#[deprecated(
-    since = "5.9.0",
-    note = "This function was never meant to be public and will be removed in a future release."
-)]
-pub fn vec_to_cstr(mut bytes: Vec<u8>) -> Cow<'static, CStr> {
-    if let Some(pos) = bytes.iter().position(|&b| b == 0) {
-        bytes.truncate(pos + 1);
-    } else {
-        bytes.push(0);
-    }
-    // unwrap is fine here since we append the null byte.
-    Cow::Owned(CString::from_vec_with_nul(bytes).unwrap())
-}
-
 /// Converts a byte slice into a null-terminated [CStr].
 ///
 /// Returns a borrowed [CStr] if the slice already contains a null byte; otherwise, returns an
@@ -317,37 +295,21 @@ mod file_path_test {
         assert!(matches!(PathBuf::try_from(non_utf8), Err(Error::Utf8(_))));
     }
 
+    /// Whatever comes in, exactly one nul comes out, at the end.
     #[test]
-    fn vec_nul_termination() {
-        #[allow(deprecated)]
-        fn call_vec_to_cstr(v: Vec<u8>) -> Cow<'static, CStr> {
-            vec_to_cstr(v)
-        }
-        let v1 = vec![];
-        let v2 = vec![0x0];
-        let v3 = vec![0x1, 0x2, 0x0];
-        let v4 = vec![0x0, 0x0];
-        let v5 = vec![0x1, 0x0, 0x2, 0x0];
+    fn nul_termination() {
+        // (input, expected nul-terminated output)
+        let cases: [(&[u8], &[u8]); 5] = [
+            (b"", b"\0"),
+            (b"\0", b"\0"),
+            (b"\x01\x02\0", b"\x01\x02\0"),
+            (b"\0\0", b"\0"),
+            (b"\x01\0\x02\0", b"\x01\0"),
+        ];
 
-        assert_eq!(
-            Cow::Borrowed(CStr::from_bytes_with_nul(&[0x0]).unwrap()),
-            call_vec_to_cstr(v1)
-        );
-        assert_eq!(
-            Cow::Borrowed(CStr::from_bytes_with_nul(&[0x0]).unwrap()),
-            call_vec_to_cstr(v2)
-        );
-        assert_eq!(
-            Cow::Borrowed(CStr::from_bytes_with_nul(&[0x1, 0x2, 0x0]).unwrap()),
-            call_vec_to_cstr(v3)
-        );
-        assert_eq!(
-            Cow::Borrowed(CStr::from_bytes_with_nul(&[0x0]).unwrap()),
-            call_vec_to_cstr(v4)
-        );
-        assert_eq!(
-            Cow::Borrowed(CStr::from_bytes_with_nul(&[0x1, 0x0]).unwrap()),
-            call_vec_to_cstr(v5)
-        );
+        for (input, expected) in cases {
+            let expected = CStr::from_bytes_with_nul(expected).unwrap();
+            assert_eq!(bytes_with_null(input), Cow::Borrowed(expected));
+        }
     }
 }
