@@ -1,0 +1,36 @@
+[workspace]
+members = ["zgvariant", "zgvariant_derive"]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.87"
+license = "MIT"
+repository = "https://github.com/z-galaxy/zgvariant/"
+
+[workspace.dependencies]
+# Interim git dependency until zvariant_utils 4.1.0 is on crates.io; switched to the registry
+# version before publishing.
+zvariant_utils = { git = "https://github.com/zeenix/zbus.git", branch = "zvariant-utils-derive-codegen", features = ["gvariant"] }
+zgvariant_derive = { path = "zgvariant_derive", version = "1.0.0" }
+serde = { version = "1.0.200", features = ["derive"] }
+endi = "1.1.0"
+winnow = "1.0"
+zcheapstr = { version = "1.1.0", features = ["serde"] }
+proc-macro2 = "1.0.93"
+quote = "1.0.37"
+syn = { version = "3.0", features = ["extra-traits", "full"] }
+# Optional-impl and dev dependencies.
+arrayvec = { version = "0.7.4", features = ["serde"] }
+enumflags2 = { version = "0.7.9", features = ["serde"] }
+serde_bytes = "0.11.14"
+uuid = { version = "1.8.0", features = ["serde"] }
+url = { version = "2.5.0", features = ["serde"] }
+time = { version = "0.3.36", features = ["serde"] }
+chrono = { version = "0.4.38", features = ["serde"], default-features = false }
+heapless = { version = "0.9.0", features = ["serde"] }
+camino = "1.1.9"
+serde_json = "1.0.116"
+serde_repr = "0.1.19"
+fastrand = "2.3.0"
+criterion = { version = "5.0.0", package = "codspeed-criterion-compat" }

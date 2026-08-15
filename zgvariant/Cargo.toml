@@ -1,0 +1,64 @@
+[package]
+name = "zgvariant"
+version = "1.0.0"
+authors = ["Zeeshan Ali Khan <zeeshanak@gnome.org>"]
+edition = { workspace = true }
+rust-version = { workspace = true }
+
+description = "Serde-based GVariant encoding & decoding"
+repository = { workspace = true }
+keywords = ["GVariant", "GLib", "serialization", "zvariant", "serde"]
+license = { workspace = true }
+categories = ["data-structures", "encoding", "parsing"]
+readme = "README.md"
+# Its fixture lives outside the package directory and so can't be published alongside it.
+exclude = ["/tests/ostree_de.rs"]
+
+[features]
+default = []
+# Enables the test that deserializes a real-world flatpak/ostree summary file.
+ostree-tests = []
+camino = ["dep:camino"]
+
+[dependencies]
+zgvariant_derive.workspace = true
+zvariant_utils.workspace = true
+zcheapstr.workspace = true
+endi.workspace = true
+serde.workspace = true
+winnow.workspace = true
+
+arrayvec = { workspace = true, optional = true }
+enumflags2 = { workspace = true, optional = true }
+serde_bytes = { workspace = true, optional = true }
+uuid = { workspace = true, optional = true }
+url = { workspace = true, optional = true }
+time = { workspace = true, optional = true }
+chrono = { workspace = true, optional = true }
+heapless = { workspace = true, optional = true }
+camino = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true
+serde_repr.workspace = true
+fastrand.workspace = true
+criterion.workspace = true
+chrono = { workspace = true, features = ["serde", "alloc"], default-features = false }
+
+[lib]
+bench = false
+
+[[bench]]
+name = "benchmarks"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-gnu",
+    "x86_64-apple-darwin",
+    "x86_64-unknown-freebsd",
+    "x86_64-unknown-netbsd",
+    "aarch64-linux-android",
+]

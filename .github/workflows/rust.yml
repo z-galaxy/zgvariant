@@ -1,0 +1,158 @@
+name: Lint, Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  MSRV:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+      MSRV: 1.87.0
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.MSRV }}
+          targets: x86_64-pc-windows-gnu, x86_64-apple-darwin, x86_64-unknown-freebsd, x86_64-unknown-netbsd, aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+      - name: Check build with MSRV
+        run: |
+          cargo --locked check
+          cargo --locked check --target x86_64-pc-windows-gnu
+          cargo --locked check --target x86_64-apple-darwin
+          cargo --locked check --target x86_64-unknown-freebsd
+          cargo --locked check --target x86_64-unknown-netbsd
+          cargo --locked check --target aarch64-linux-android
+        # This would be nice but some optional deps (e.g `time`) move very fast wrt to MSRV.
+        # cargo --locked check --all-features
+
+  fmt:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      RUST_LOG: trace
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          # We use some nightly fmt options.
+          toolchain: nightly
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Check formatting
+        run: |
+          cargo --locked fmt -- --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      RUST_LOG: trace
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Catch common mistakes and unwrap calls
+        run: |
+          cargo --locked clippy --all-features -- -D warnings
+          cargo --locked clippy -- -D warnings
+
+  linux_test:
+    runs-on: ubuntu-latest
+    needs: [fmt, clippy]
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      RUST_LOG: trace
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build and Test
+        run: |
+          cargo --locked test
+          # `--all-features` includes `ostree-tests`.
+          cargo --locked test --all-features
+          cargo --locked bench --no-run
+
+  windows_test:
+    runs-on: windows-latest
+    needs: [fmt, clippy]
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      RUST_LOG: trace
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        run: cargo --locked test --all-features
+
+  macos_test:
+    runs-on: macos-latest
+    needs: [fmt, clippy]
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      RUST_LOG: trace
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        run: cargo --locked test --all-features
+
+  doc_build:
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check documentation build
+        run: cargo --locked doc --all-features
+
+  fuzz:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      RUST_LOG: trace
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@v2
+      - name: Fuzz zgvariant
+        run: |
+          cargo install cargo-fuzz
+          cargo --locked fuzz run --fuzz-dir zgvariant/fuzz gvariant -- \
+            -max_total_time=30 -max_len=100M
+
+  semver-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
