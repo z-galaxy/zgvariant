@@ -24,3 +24,4 @@ syn.workspace = true
 [dev-dependencies]
 zgvariant = { path = "../zgvariant" }
 serde.workspace = true
+serde_repr.workspace = true
