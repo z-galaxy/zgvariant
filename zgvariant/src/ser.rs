@@ -899,8 +899,12 @@ where
         }
 
         if let Some(key_offset) = key_offset {
-            let entry_size = self.seq.ser.0.bytes_written - self.key_start.unwrap_or(0);
-            let offset_size = FramingOffsetSize::for_encoded_container(entry_size);
+            // The decoder picks the width from the length of the *whole* encoded entry, which
+            // includes the key offset itself, so the width must be chosen self-inclusively here.
+            // Otherwise an entry body of exactly `u8::MAX` (or `u16::MAX`, ..) bytes would be
+            // encoded with a narrower offset than the decoder goes on to read back.
+            let body_size = self.seq.ser.0.bytes_written - self.key_start.unwrap_or(0);
+            let offset_size = FramingOffsetSize::for_bare_container(body_size, 1);
             offset_size.write_offset(&mut self.seq.ser.0, key_offset)?;
         }
 
