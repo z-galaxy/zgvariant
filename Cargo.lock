@@ -1236,7 +1236,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "syn 2.0.119",
+ "syn 3.0.3",
  "zgvariant",
  "zvariant_utils",
 ]
