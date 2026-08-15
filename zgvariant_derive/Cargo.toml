@@ -1,0 +1,26 @@
+[package]
+name = "zgvariant_derive"
+version = "1.0.0"
+authors = ["Zeeshan Ali Khan <zeeshanak@gnome.org>"]
+edition = { workspace = true }
+rust-version = { workspace = true }
+
+description = "Derive macros for the zgvariant crate"
+repository = { workspace = true }
+keywords = ["GVariant", "GLib", "serialization", "derive", "serde"]
+license = { workspace = true }
+categories = ["data-structures", "encoding", "parsing"]
+readme = "README.md"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+zvariant_utils.workspace = true
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true
+
+[dev-dependencies]
+zgvariant = { path = "../zgvariant" }
+serde.workspace = true
