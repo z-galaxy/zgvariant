@@ -11,6 +11,8 @@ keywords = ["GVariant", "GLib", "serialization", "zvariant", "serde"]
 license = { workspace = true }
 categories = ["data-structures", "encoding", "parsing"]
 readme = "README.md"
+# Its fixture lives outside the package directory and so can't be published alongside it.
+exclude = ["/tests/ostree_de.rs"]
 
 [features]
 default = []

@@ -354,7 +354,7 @@ where
         let seq = self.serialize_seq(Some(v.len()))?;
         seq.ser
             .0
-            .write(v)
+            .write_all(v)
             .map_err(|e| Error::InputOutput(e.into()))?;
         seq.end()
     }
