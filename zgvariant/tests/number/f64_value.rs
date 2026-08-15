@@ -1,0 +1,62 @@
+use zgvariant::{Basic, LE, NATIVE_ENDIAN, Value, serialized::Context, to_bytes};
+
+#[test]
+fn f64_value() {
+    let encoded = f64_type_test(99999.99999_f64, 8, 10);
+    assert!((NATIVE_ENDIAN.read_f64(&encoded) - 99999.99999_f64).abs() < f64::EPSILON);
+}
+
+fn f64_type_test(
+    value: f64,
+    expected_len: usize,
+    expected_value_len: usize,
+) -> zgvariant::serialized::Data<'static> {
+    // Lie that we're starting at byte 1 in the overall message to test padding
+    let ctxt = Context::new(NATIVE_ENDIAN, 1);
+    let encoded = to_bytes(ctxt, &value).unwrap();
+    let padding = zgvariant::padding_for_n_bytes(1, 8);
+    assert_eq!(
+        encoded.len(),
+        expected_len + padding,
+        "invalid encoding using `to_bytes`"
+    );
+
+    let decoded: f64 = encoded.deserialize().unwrap().0;
+    assert!(
+        (decoded - value).abs() < f64::EPSILON,
+        "invalid decoding using `from_slice`"
+    );
+
+    // Now encode w/o padding
+    let ctxt = Context::new(NATIVE_ENDIAN, 0);
+    let encoded = to_bytes(ctxt, &value).unwrap();
+    assert_eq!(
+        encoded.len(),
+        expected_len,
+        "invalid encoding using `to_bytes`"
+    );
+
+    f64_type_test_as_value(value, expected_value_len);
+    encoded
+}
+
+fn f64_type_test_as_value(value: f64, expected_value_len: usize) {
+    let v: Value<'_> = value.into();
+    assert_eq!(v.value_signature(), f64::SIGNATURE_STR);
+    assert_eq!(v, Value::F64(value));
+    f64_value_test(v.try_clone().unwrap(), expected_value_len);
+    let v: f64 = v.try_into().unwrap();
+    assert!((v - value).abs() < f64::EPSILON);
+}
+
+fn f64_value_test(v: Value<'_>, expected_value_len: usize) {
+    let ctxt = Context::new(LE, 0);
+    let encoded = to_bytes(ctxt, &v).unwrap();
+    assert_eq!(
+        encoded.len(),
+        expected_value_len,
+        "invalid encoding using `to_bytes`"
+    );
+    let decoded: Value<'_> = encoded.deserialize().unwrap().0;
+    assert!(decoded == v, "invalid decoding using `from_slice`");
+}
