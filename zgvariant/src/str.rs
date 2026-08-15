@@ -1,4 +1,6 @@
-/// This type is used for keeping strings in a `Value`, among other things.
+/// This type is used for keeping strings in a [`Value`], among other things.
+///
+/// [`Value`]: crate::Value::Str
 pub use zcheapstr::CheapStr as Str;
 
 use crate::{Basic, Type};

@@ -14,8 +14,14 @@
 mod utils;
 pub use utils::*;
 
+mod array;
+pub use array::*;
+
 mod basic;
 pub use basic::*;
+
+mod dict;
+pub use dict::*;
 
 mod object_path;
 pub use crate::object_path::*;
@@ -29,6 +35,18 @@ pub use signature::Signature;
 mod str;
 pub use crate::str::*;
 
+mod structure;
+pub use crate::structure::*;
+
+mod maybe;
+pub use crate::maybe::*;
+
+mod optional;
+pub use crate::optional::*;
+
+mod value;
+pub use value::*;
+
 mod error;
 pub use error::*;
 
@@ -38,6 +56,15 @@ pub use r#type::*;
 
 mod tuple;
 pub use tuple::*;
+
+mod from_value;
+
+mod into_value;
+
+mod owned_value;
+pub use owned_value::*;
+
+pub mod as_value;
 
 pub use zgvariant_derive::{DeserializeDict, OwnedValue, SerializeDict, Type, Value, signature};
 
