@@ -11,7 +11,7 @@ repository = "https://github.com/z-galaxy/zgvariant/"
 [workspace.dependencies]
 # Interim git dependency until zvariant_utils 4.1.0 is on crates.io; switched to the registry
 # version before publishing.
-zvariant_utils = { git = "https://github.com/zeenix/zbus.git", branch = "zvariant-utils-derive-codegen", features = ["gvariant"] }
+zvariant_utils = { git = "https://github.com/z-galaxy/zbus.git", features = ["gvariant"] }
 zgvariant_derive = { path = "zgvariant_derive", version = "1.0.0" }
 serde = { version = "1.0.200", features = ["derive"] }
 endi = "1.1.0"
