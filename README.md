@@ -68,7 +68,7 @@ derive macros (`Type`, `Value`, `OwnedValue`, `SerializeDict`, `DeserializeDict`
 | `zvariant::...` imports             | `zgvariant::...`                             |
 | `Context::new_gvariant(endian, n)`  | `Context::new(endian, n)`                    |
 | `serialized::Format` dispatch       | gone — there is only one format              |
-| `option-as-array` feature           | gone — `Option<T>` is always a GVariant maybe|
+| `option-as-array` feature           | gone — `Option<T>` is always a GVariant' `maybe` type|
 | `Value::Fd` / fd passing            | not supported (D-Bus wire concept)           |
 | `#[zvariant(...)]` derive attrs     | still accepted; `#[zgvariant(...)]` preferred|
 | `SerializeValue`/`DeserializeValue` | gone — `as_value::{Serialize, Deserialize}`  |
