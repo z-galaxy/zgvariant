@@ -210,7 +210,8 @@ dependencies = [
 [[package]]
 name = "zvariant_utils"
 version = "4.1.0"
-source = "git+https://github.com/z-galaxy/zbus.git#2db13c5f0c2b0d06ee74c51e1c475fd71a6e15b5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b84ebb462416c27cdb97f2e7f5f0ccc844da1fe2ecc7121e1b690b41318bf42"
 dependencies = [
  "proc-macro2",
  "quote",
