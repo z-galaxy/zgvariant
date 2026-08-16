@@ -210,7 +210,7 @@ dependencies = [
 [[package]]
 name = "zvariant_utils"
 version = "4.1.0"
-source = "git+https://github.com/zeenix/zbus.git?branch=zvariant-utils-derive-codegen#b8a4807a3d3abc368c605b66cbeabe40d3a84310"
+source = "git+https://github.com/z-galaxy/zbus.git#2db13c5f0c2b0d06ee74c51e1c475fd71a6e15b5"
 dependencies = [
  "proc-macro2",
  "quote",
