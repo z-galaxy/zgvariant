@@ -1,6 +1,6 @@
 # zgvariant
 
-[![](https://docs.rs/zgvariant/badge.svg)](https://docs.rs/zgvariant/) [![](https://img.shields.io/crates/v/zgvariant)](https://crates.io/crates/zgvariant) [![CI Pipeline Status](https://github.com/z-galaxy/zgvariant/actions/workflows/rust.yml/badge.svg)](https://github.com/z-galaxy/zgvariant/actions/workflows/rust.yml)
+[![](https://docs.rs/zgvariant/badge.svg)](https://docs.rs/zgvariant/) [![](https://img.shields.io/crates/v/zgvariant)](https://crates.io/crates/zgvariant) [![CI Pipeline Status](https://github.com/z-galaxy/zgvariant/actions/workflows/rust.yml/badge.svg)](https://github.com/z-galaxy/zgvariant/actions/workflows/rust.yml) [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/z-galaxy/zgvariant?utm_source=badge)
 
 This crate provides a [serde]-based API for encoding and decoding data to and from the
 [GVariant] binary format. It started life as the `gvariant` cargo feature of [zvariant] (part of
