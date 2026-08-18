@@ -2,11 +2,13 @@
 # https://release-plz.dev/docs/config
 
 [workspace]
-# Enable all release features.
 git_release_enable = true
 git_tag_enable = true
 publish = true
-semver_check = true
+# Turned off so the breaking `Optional` removal can ship as a minor bump (a
+# correction to the just-published 1.0.0) rather than being forced to a major
+# one. Can be re-enabled once that release is out.
+semver_check = false
 git_tag_name = "{{ package }}-{{ version }}"
 git_release_name = "{{ package }}-{{ version }}"
 

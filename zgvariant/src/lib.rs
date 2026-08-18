@@ -48,9 +48,6 @@ pub use crate::structure::*;
 mod maybe;
 pub use crate::maybe::*;
 
-mod optional;
-pub use crate::optional::*;
-
 mod value;
 pub use value::*;
 
