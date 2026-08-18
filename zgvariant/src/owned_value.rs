@@ -2,8 +2,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::{borrow::Borrow, collections::HashMap, hash::BuildHasher};
 
 use crate::{
-    Array, Dict, Maybe, NoneValue, ObjectPath, Optional, OwnedObjectPath, Signature, Str,
-    Structure, Type, Value,
+    Array, Dict, Maybe, ObjectPath, OwnedObjectPath, Signature, Str, Structure, Type, Value,
 };
 
 // FIXME: Replace with a generic impl<T: TryFrom<Value>> TryFrom<OwnedValue> for T?
@@ -145,27 +144,6 @@ where
 {
     fn from(value: HashMap<K, V, H>) -> Self {
         Self(value.into())
-    }
-}
-
-impl<'a, T> TryFrom<OwnedValue> for Optional<T>
-where
-    T: TryFrom<Value<'a>> + NoneValue + PartialEq<<T as NoneValue>::NoneType>,
-    T::Error: Into<crate::Error>,
-{
-    type Error = crate::Error;
-
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
-        Self::try_from(value.0)
-    }
-}
-
-impl<V> From<Optional<V>> for OwnedValue
-where
-    V: Into<Value<'static>> + NoneValue<NoneType = V>,
-{
-    fn from(v: Optional<V>) -> OwnedValue {
-        Self(Value::from(v))
     }
 }
 

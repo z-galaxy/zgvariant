@@ -1,6 +1,5 @@
 use crate::{
-    Array, Dict, Error, Maybe, NoneValue, ObjectPath, Optional, OwnedObjectPath, Signature, Str,
-    Structure, Value,
+    Array, Dict, Error, Maybe, ObjectPath, OwnedObjectPath, Signature, Str, Structure, Value,
 };
 
 use std::{collections::HashMap, hash::BuildHasher};
@@ -173,24 +172,6 @@ where
         } else {
             Err(crate::Error::IncorrectType)
         }
-    }
-}
-
-impl<'a, T> TryFrom<Value<'a>> for Optional<T>
-where
-    T: TryFrom<Value<'a>> + NoneValue + PartialEq<<T as NoneValue>::NoneType>,
-    T::Error: Into<crate::Error>,
-{
-    type Error = crate::Error;
-
-    fn try_from(value: Value<'a>) -> Result<Self, Self::Error> {
-        T::try_from(value).map_err(Into::into).map(|value| {
-            if value == T::null_value() {
-                Optional::from(None)
-            } else {
-                Optional::from(Some(value))
-            }
-        })
     }
 }
 

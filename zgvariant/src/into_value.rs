@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::HashMap, hash::BuildHasher, sync::Arc};
 
-use crate::{Array, Dict, Maybe, NoneValue, ObjectPath, Optional, Str, Structure, Type, Value};
+use crate::{Array, Dict, Maybe, ObjectPath, Str, Structure, Type, Value};
 
 //
 // Conversions from encodable types to `Value`
@@ -117,17 +117,6 @@ where
 {
     fn from(value: HashMap<K, V, H>) -> Self {
         Self::Dict(value.into())
-    }
-}
-
-impl<'v, V> From<Optional<V>> for Value<'v>
-where
-    V: Into<Value<'v>> + NoneValue<NoneType = V>,
-{
-    fn from(v: Optional<V>) -> Value<'v> {
-        Option::<V>::from(v)
-            .unwrap_or_else(|| V::null_value())
-            .into()
     }
 }
 
