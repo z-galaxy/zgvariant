@@ -1197,7 +1197,7 @@ dependencies = [
 
 [[package]]
 name = "zgvariant"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "arrayvec",
  "camino",
@@ -1222,7 +1222,7 @@ dependencies = [
 
 [[package]]
 name = "zgvariant_derive"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
