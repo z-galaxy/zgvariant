@@ -9,8 +9,9 @@ license = "MIT"
 repository = "https://github.com/z-galaxy/zgvariant/"
 
 [workspace.dependencies]
-zvariant_utils = { version = "4.1.0", features = ["gvariant"] }
-zgvariant_derive = { path = "zgvariant_derive", version = "1.1.0" }
+# Retarget at the crates.io release before publishing 2.0; crates.io rejects git dependencies.
+zbus_utils = { git = "https://github.com/z-galaxy/zbus", features = ["gvariant"] }
+zgvariant_derive = { path = "zgvariant_derive", version = "2.0.0" }
 serde = { version = "1.0.200", features = ["derive"] }
 endi = "1.1.0"
 winnow = "1.0"

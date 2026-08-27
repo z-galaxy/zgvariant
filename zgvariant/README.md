@@ -73,8 +73,10 @@ derive macros (`Type`, `Value`, `OwnedValue`, `SerializeDict`, `DeserializeDict`
 | `#[zvariant(...)]` derive attrs     | still accepted; `#[zgvariant(...)]` preferred|
 | `SerializeValue`/`DeserializeValue` | gone — `as_value::{Serialize, Deserialize}`  |
 
-`Signature` is the same type in both crates (re-exported from `zvariant_utils`), so signatures
-can be passed between zvariant- and zgvariant-using code freely.
+`Signature` is the same type as zbus 6's `zbus::wire::Signature` — both re-export it from
+`zbus_utils` — so signatures can be passed between zbus- and zgvariant-using code freely.
+zvariant 5 and zgvariant 1.x shared it through `zvariant_utils` instead; a graph mixing either
+of those with this release carries two unrelated `Signature` types.
 
 Note: a type cannot derive both zvariant's and zgvariant's `Type` in the same scope without
 renaming one import, since the derive macros share their names.

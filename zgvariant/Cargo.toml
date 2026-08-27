@@ -1,6 +1,6 @@
 [package]
 name = "zgvariant"
-version = "1.1.0"
+version = "2.0.0"
 authors = ["Zeeshan Ali Khan <zeeshanak@gnome.org>"]
 edition = { workspace = true }
 rust-version = { workspace = true }
@@ -22,7 +22,7 @@ camino = ["dep:camino"]
 
 [dependencies]
 zgvariant_derive.workspace = true
-zvariant_utils.workspace = true
+zbus_utils.workspace = true
 zcheapstr.workspace = true
 endi.workspace = true
 serde.workspace = true
