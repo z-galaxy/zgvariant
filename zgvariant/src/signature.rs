@@ -1,6 +1,6 @@
 use crate::{Basic, Type};
 
-pub use zvariant_utils::signature::*;
+pub use zbus_utils::signature::*;
 
 impl From<Error> for crate::Error {
     fn from(e: Error) -> Self {

@@ -1,5 +1,4 @@
 use crate::{Signature, Type, impl_type_with_repr};
-use zvariant_utils::serialized::Format;
 
 /// Trait for basic types.
 ///
@@ -18,7 +17,7 @@ pub trait Basic: Type {
     /// The default implementation covers all possible cases so you should never need to override
     /// it.
     fn alignment() -> usize {
-        Self::SIGNATURE.alignment(Format::GVariant)
+        Self::SIGNATURE.alignment_gvariant()
     }
 }
 

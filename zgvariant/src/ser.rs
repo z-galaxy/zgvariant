@@ -7,8 +7,6 @@ use std::{
     str::FromStr,
 };
 
-use zvariant_utils::serialized::Format;
-
 use crate::{
     Basic, DynamicType, Error, Result, Signature, WriteBytes,
     container_depths::ContainerDepths,
@@ -221,7 +219,7 @@ where
     where
         T: ?Sized + Serialize,
     {
-        let alignment = self.0.signature.alignment(Format::GVariant);
+        let alignment = self.0.signature.alignment_gvariant();
         self.0.add_padding(alignment)?;
 
         let mut child_signature = match self.0.signature {
@@ -418,7 +416,7 @@ where
 
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
         let signature = self.0.signature;
-        let alignment = signature.alignment(Format::GVariant);
+        let alignment = signature.alignment_gvariant();
         self.0.add_padding(alignment)?;
 
         let (child_signature, fixed_sized_element) = match signature {
@@ -503,8 +501,7 @@ where
     }
 
     fn serialize_struct(self, _name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
-        self.0
-            .add_padding(self.0.signature.alignment(Format::GVariant))?;
+        self.0.add_padding(self.0.signature.alignment_gvariant())?;
         match &self.0.signature {
             Signature::Variant => StructSerializer::variant(self).map(StructSeqSerializer::Struct),
             Signature::Array(_) => self.serialize_seq(Some(len)).map(StructSeqSerializer::Seq),
@@ -633,7 +630,7 @@ where
     }
 
     fn structure(ser: &'b mut Serializer<'ser, W>) -> Result<Self> {
-        let alignment = ser.0.signature.alignment(Format::GVariant);
+        let alignment = ser.0.signature.alignment_gvariant();
         ser.0.add_padding(alignment)?;
 
         let offsets = match ser.0.signature {
@@ -680,14 +677,14 @@ where
             .get(1)
             .filter(|&f| matches!(f, Signature::Structure(_)));
 
-        let alignment = ser.0.signature.alignment(Format::GVariant);
+        let alignment = ser.0.signature.alignment_gvariant();
         ser.0.add_padding(alignment)?;
         let mut struct_ser = Self::structure(ser)?;
         struct_ser.serialize_struct_element(&variant_index)?;
 
         if let Some(field) = struct_field {
             // Add struct padding for inner struct and pretend we're the inner struct.
-            let alignment = field.alignment(Format::GVariant);
+            let alignment = field.alignment_gvariant();
             struct_ser.ser.0.add_padding(alignment)?;
             struct_ser.field_idx = 0;
             struct_ser.ser.0.signature = field;
@@ -770,7 +767,7 @@ where
 
         if self.ser.0.signature.is_fixed_sized() {
             debug_assert!(offsets.is_empty());
-            let alignment = self.ser.0.signature.alignment(Format::GVariant);
+            let alignment = self.ser.0.signature.alignment_gvariant();
             self.ser.0.add_padding(alignment)?;
         }
 

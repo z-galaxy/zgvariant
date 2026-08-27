@@ -4,7 +4,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::DeriveInput;
-use zvariant_utils::derive::{self, Config};
+use zbus_utils::derive::{self, Config};
 
 fn config() -> Config {
     Config {
@@ -665,7 +665,7 @@ pub fn signature(input: TokenStream) -> TokenStream {
 #[cfg(test)]
 mod tests {
     use syn::parse_quote;
-    use zvariant_utils::derive;
+    use zbus_utils::derive;
 
     #[test]
     fn type_derive_emits_zgvariant_paths() {

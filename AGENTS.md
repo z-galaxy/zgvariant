@@ -7,7 +7,7 @@ This file provides guidance to AI coding agents when working with code in this r
 zgvariant is a serde-based implementation of the [GVariant] binary serialization format,
 extracted from the `zvariant` crate ([zbus] project). It's a two-crate workspace: `zgvariant`
 (the format implementation) and `zgvariant_derive` (thin proc-macro shells over the codegen
-shared with zvariant via `zvariant_utils`).
+shared with zbus via `zbus_utils`).
 
 Besides the library and its test suite (`zgvariant/tests/`), the repository also has:
 
