@@ -1113,6 +1113,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "zbus_utils"
+version = "6.0.0"
+source = "git+https://github.com/z-galaxy/zbus#70a8676b82e3a03e54add767b1e8894d743f5165"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 3.0.3",
+ "winnow",
+]
+
+[[package]]
 name = "zcheapstr"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1197,7 +1209,7 @@ dependencies = [
 
 [[package]]
 name = "zgvariant"
-version = "1.1.0"
+version = "2.0.0"
 dependencies = [
  "arrayvec",
  "camino",
@@ -1215,22 +1227,22 @@ dependencies = [
  "url",
  "uuid",
  "winnow",
+ "zbus_utils",
  "zcheapstr",
  "zgvariant_derive",
- "zvariant_utils",
 ]
 
 [[package]]
 name = "zgvariant_derive"
-version = "1.1.0"
+version = "2.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
  "serde",
  "serde_repr",
  "syn 3.0.3",
+ "zbus_utils",
  "zgvariant",
- "zvariant_utils",
 ]
 
 [[package]]
@@ -1238,16 +1250,3 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
-
-[[package]]
-name = "zvariant_utils"
-version = "4.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b84ebb462416c27cdb97f2e7f5f0ccc844da1fe2ecc7121e1b690b41318bf42"
-dependencies = [
- "proc-macro2",
- "quote",
- "serde",
- "syn 3.0.3",
- "winnow",
-]

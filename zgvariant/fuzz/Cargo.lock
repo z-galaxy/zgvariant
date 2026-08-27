@@ -168,6 +168,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "zbus_utils"
+version = "6.0.0"
+source = "git+https://github.com/z-galaxy/zbus#70a8676b82e3a03e54add767b1e8894d743f5165"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn",
+ "winnow",
+]
+
+[[package]]
 name = "zcheapstr"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -178,14 +190,14 @@ dependencies = [
 
 [[package]]
 name = "zgvariant"
-version = "1.0.0"
+version = "2.0.0"
 dependencies = [
  "endi",
  "serde",
  "winnow",
+ "zbus_utils",
  "zcheapstr",
  "zgvariant_derive",
- "zvariant_utils",
 ]
 
 [[package]]
@@ -199,23 +211,10 @@ dependencies = [
 
 [[package]]
 name = "zgvariant_derive"
-version = "1.0.0"
+version = "2.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
- "zvariant_utils",
-]
-
-[[package]]
-name = "zvariant_utils"
-version = "4.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b84ebb462416c27cdb97f2e7f5f0ccc844da1fe2ecc7121e1b690b41318bf42"
-dependencies = [
- "proc-macro2",
- "quote",
- "serde",
- "syn",
- "winnow",
+ "zbus_utils",
 ]

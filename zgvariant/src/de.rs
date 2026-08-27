@@ -2,8 +2,6 @@ use serde::de::{self, DeserializeSeed, EnumAccess, MapAccess, SeqAccess, Variant
 
 use std::str;
 
-use zvariant_utils::serialized::Format;
-
 use crate::{
     Basic, Error, ObjectPath, Result, Signature, container_depths::ContainerDepths,
     framing_offset_size::FramingOffsetSize, framing_offsets::FramingOffsets, serialized::Context,
@@ -364,7 +362,7 @@ impl<'de, 'd, 'sig> de::Deserializer<'de> for &'d mut Deserializer<'de, 'sig> {
     where
         V: Visitor<'de>,
     {
-        let alignment = self.0.signature.alignment(Format::GVariant);
+        let alignment = self.0.signature.alignment_gvariant();
         self.0.parse_padding(alignment)?;
 
         let child_signature = match self.0.signature {
@@ -451,7 +449,7 @@ impl<'de, 'd, 'sig> de::Deserializer<'de> for &'d mut Deserializer<'de, 'sig> {
     where
         V: Visitor<'de>,
     {
-        let alignment = self.0.signature.alignment(Format::GVariant);
+        let alignment = self.0.signature.alignment_gvariant();
         self.0.parse_padding(alignment)?;
 
         match self.0.signature {
@@ -498,7 +496,7 @@ impl<'de, 'd, 'sig> de::Deserializer<'de> for &'d mut Deserializer<'de, 'sig> {
     where
         V: Visitor<'de>,
     {
-        let alignment = self.0.signature.alignment(Format::GVariant);
+        let alignment = self.0.signature.alignment_gvariant();
         self.0.parse_padding(alignment)?;
 
         let v = visitor.visit_enum(crate::de::Enum {
@@ -582,7 +580,7 @@ struct ArrayDeserializer<'d, 'de, 'sig> {
 impl<'d, 'de, 'sig> ArrayDeserializer<'d, 'de, 'sig> {
     fn new(de: &'d mut Deserializer<'de, 'sig>) -> Result<Self> {
         de.0.container_depths = de.0.container_depths.inc_array()?;
-        let alignment = de.0.signature.alignment(Format::GVariant);
+        let alignment = de.0.signature.alignment_gvariant();
         de.0.parse_padding(alignment)?;
         let mut len = de.0.bytes.len() - de.0.pos;
 
@@ -836,7 +834,7 @@ impl<'d, 'de, 'sig> StructureDeserializer<'d, 'de, 'sig> {
             Signature::Structure(fields) => fields.iter().count(),
             _ => unreachable!("Incorrect signature for struct"),
         };
-        let alignment = de.0.signature.alignment(Format::GVariant);
+        let alignment = de.0.signature.alignment_gvariant();
         de.0.parse_padding(alignment)?;
         de.0.container_depths = de.0.container_depths.inc_structure()?;
 
@@ -927,7 +925,7 @@ impl<'d, 'de, 'sig> SeqAccess<'de> for StructureDeserializer<'d, 'de, 'sig> {
 
             if self.de.0.signature.is_fixed_sized() {
                 debug_assert_eq!(self.offsets_len, 0);
-                let alignment = self.de.0.signature.alignment(Format::GVariant);
+                let alignment = self.de.0.signature.alignment_gvariant();
                 self.de.0.parse_padding(alignment)?;
             }
 
