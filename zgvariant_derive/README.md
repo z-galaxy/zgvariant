@@ -24,7 +24,7 @@ struct Struct<'s> {
 assert_eq!(Struct::SIGNATURE, "(qxs)");
 let s = Struct {
     field1: 42,
-    field2: i64::max_value(),
+    field2: i64::MAX,
     field3: "hello",
 };
 let ctxt = Context::new(LE, 0);
