@@ -60,6 +60,68 @@ derive macros (`Type`, `Value`, `OwnedValue`, `SerializeDict`, `DeserializeDict`
 | `uuid` | Implement `Type` for [`uuid::Uuid`] |
 | `ostree-tests` | Enable the test that deserializes a real-world flatpak/ostree summary file |
 
+## Flags types
+
+For bit flags, we recommend the [`bitflags`] crate's "impl form". It needs no support from zgvariant
+and no `serde` feature of `bitflags`: declare the newtype yourself with the derives you need on it,
+and let the `bitflags!` macro generate the flags API for it. The derives treat the newtype as its
+integer, so both the signature and the encoding are those of the integer:
+
+```rust
+use bitflags::bitflags;
+use serde::{Deserialize, Serialize};
+use zgvariant::{serialized::Context, to_bytes, Basic, OwnedValue, Type, Value, LE};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Type, Value, OwnedValue)]
+struct Permissions(u32);
+
+bitflags! {
+    impl Permissions: u32 {
+        const READ = 0x1;
+        const WRITE = 0x2;
+    }
+}
+
+// Only needed to use `Permissions` as a dictionary key when converting from a `Value`.
+impl Basic for Permissions {
+    const SIGNATURE_CHAR: char = 'u';
+    const SIGNATURE_STR: &'static str = "u";
+}
+
+assert_eq!(Permissions::SIGNATURE, "u");
+
+let permissions = Permissions::READ | Permissions::WRITE;
+let encoded = to_bytes(Context::new(LE, 0), &permissions).unwrap();
+assert_eq!(encoded.bytes(), 3u32.to_le_bytes());
+let decoded: Permissions = encoded.deserialize().unwrap().0;
+assert_eq!(decoded, permissions);
+
+let value = Value::from(permissions);
+assert_eq!(Permissions::try_from(value).unwrap(), permissions);
+```
+
+Deserializing retains the bits that don't belong to any named flag (just like
+`from_bits_retain`), so your code stays compatible with peers that start using flags it doesn't
+know about yet. In this form, `bitflags!` doesn't generate `Debug` for you: the derive above prints
+the raw integer (`Permissions(3)`), whereas implementing it with `bitflags::parser::to_writer`
+prints the flag names. That function writes nothing for a value with no flags set, so print `0x0`
+yourself in that case if you'd rather not get an empty string.
+
+Converting a `Value` that borrows from a buffer (for example one you deserialized) into such a type
+requires calling `try_into_owned()` on it first: for a type without lifetime parameters, the `Value`
+derive converts only from `Value<'static>`, whereas the `enumflags2` feature accepts any lifetime.
+Using the type as a dictionary key in conversions from `Value` requires `Basic`, which the derives
+don't provide, hence the `impl Basic` above.
+
+The macro-generated form (`bitflags! { struct Permissions: u32 { ... } }`) works too, as long as you
+enable the `serde` feature of `bitflags` and add `#[zgvariant(signature = "u")]` to the type, but it
+can't derive `Value` and `OwnedValue`. Since zgvariant's (de)serializers are not human-readable,
+that form gets the plain integer rather than the `"READ | WRITE"` string that `bitflags` uses for
+human-readable formats.
+
+The `enumflags2` feature remains for compatibility with existing code that uses
+[`enumflags2::BitFlags`]. Unlike the above, it rejects bits that don't belong to any flag.
+
 ## Migrating from zvariant's `gvariant` feature
 
 | zvariant                            | zgvariant                                    |
@@ -94,6 +156,7 @@ MIT license, see [LICENSE].
 [zgvariant_derive]: https://docs.rs/zgvariant_derive/latest/zgvariant_derive/
 [`arrayvec::ArrayVec`]: https://docs.rs/arrayvec/latest/arrayvec/struct.ArrayVec.html
 [`arrayvec::ArrayString`]: https://docs.rs/arrayvec/latest/arrayvec/struct.ArrayString.html
+[`bitflags`]: https://docs.rs/bitflags/latest/bitflags/
 [`camino::Utf8Path`]: https://docs.rs/camino/latest/camino/struct.Utf8Path.html
 [`camino::Utf8PathBuf`]: https://docs.rs/camino/latest/camino/struct.Utf8PathBuf.html
 [`chrono`]: https://docs.rs/chrono/latest/chrono/
