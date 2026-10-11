@@ -20,7 +20,7 @@ Besides the library and its test suite (`zgvariant/tests/`), the repository also
 ## Conventions
 
 - **Commit style**: gimoji emoji-prefixed commit messages, enforced by commitlint via
-  `@gimoji/commitlint-config-gimoji`.
+  `@gimoji/commitlint-config-gimoji`. No package prefix after the emoji (unlike zbus).
 - **Formatting**: `cargo +nightly fmt` (the repo's `.rustfmt.toml` uses nightly-only options).
 - **MSRV**: 1.87.
 - **Line length**: 100 chars, in code and docs alike.

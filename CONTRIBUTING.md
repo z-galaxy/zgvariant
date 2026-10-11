@@ -22,8 +22,7 @@ Same rules apply here as for bug reports and feature requests. Plus:
 
 * We prefer atomic commits. Please read
   [this excellent blog post](https://www.aleksandrhovhannisyan.com/blog/atomic-git-commits/) for
-  more information, including the rationale. For larger changes addressing several packages
-  consider splitting your pull request, using a single commit for each package changed.
+  more information, including the rationale.
 * Please try your best to follow
   [these guidelines](https://handbook.gnome.org/development/commit-messages.html) for commit
   messages.
@@ -33,10 +32,6 @@ Same rules apply here as for bug reports and feature requests. Plus:
   itself and not the `:emoji-code:` string, by just clicking on it).
   **NOTE:** This is a curated list of emojis that have specific meanings. Please use one of the
   methods recommended here to select/fetch the most appropriate one. 🙏
-* Add a prefix indicating the packages being changed. Use either the package name or an abbreviation
-  (for example, `zgv` for `zgvariant`, `zgvd` for `zgvariant_derive`). If a commit touches multiple
-  packages, separate with a comma. For example, for a commit changing both packages, prefix the
-  commit message with `zgv,zgvd: `.
 * Add details to each commit about the changes it contains. PR description is for summarizing the
   overall changes in the PR, while commit logs are for describing the specific changes of the
   commit in question.
