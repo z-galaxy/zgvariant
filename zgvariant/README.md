@@ -131,7 +131,7 @@ The `enumflags2` feature remains for compatibility with existing code that uses
 | `zvariant::...` imports             | `zgvariant::...`                             |
 | `Context::new_gvariant(endian, n)`  | `Context::new(endian, n)`                    |
 | `serialized::Format` dispatch       | gone — there is only one format              |
-| `option-as-array` feature           | gone — `Option<T>` is always a GVariant maybe|
+| `option-as-array` feature           | gone — `Option<T>` is always a `maybe` type  |
 | `Value::Fd` / fd passing            | not supported (D-Bus wire concept)           |
 | `#[zvariant(...)]` derive attrs     | still accepted; `#[zgvariant(...)]` preferred|
 | `Value`, `OwnedValue`               | `Variant`, `OwnedVariant`                    |
