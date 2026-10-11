@@ -23,6 +23,6 @@ fn struct_byte_array() {
         .expect("Could not deserialize u8 slice in struct")
         .0;
 
-    assert_eq!(&bytes[..], [1u8, 2, 3]);
+    assert_eq!(*bytes, [1u8, 2, 3]);
     assert_eq!(map["key"], Variant::new("value"));
 }
