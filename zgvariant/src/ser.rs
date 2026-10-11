@@ -744,10 +744,10 @@ where
             }
             Signature::Variant => (),
             Signature::Structure(_) => {
-                if let Some(ref mut offsets) = self.offsets {
-                    if !field_signature.is_fixed_sized() {
-                        offsets.push_front(self.ser.0.bytes_written - self.start);
-                    }
+                if let Some(ref mut offsets) = self.offsets
+                    && !field_signature.is_fixed_sized()
+                {
+                    offsets.push_front(self.ser.0.bytes_written - self.start);
                 }
             }
             _ => unreachable!("Incorrect signature for struct"),

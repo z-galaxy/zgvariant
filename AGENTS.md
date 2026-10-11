@@ -22,7 +22,7 @@ Besides the library and its test suite (`zgvariant/tests/`), the repository also
 - **Commit style**: gimoji emoji-prefixed commit messages, enforced by commitlint via
   `@gimoji/commitlint-config-gimoji`.
 - **Formatting**: `cargo +nightly fmt` (the repo's `.rustfmt.toml` uses nightly-only options).
-- **MSRV**: 1.87.
+- **MSRV**: 1.89.
 - **Line length**: 100 chars, in code and docs alike.
 - **Changelog**: `CHANGELOG.md` is managed by [release-plz] — do not hand-edit it. Write a good
   commit message and release-plz will generate the entry at release time.
