@@ -2,11 +2,11 @@
 //!
 //! The recommended way to define such a type is bitflags' "impl form": declare the newtype struct
 //! yourself, put whatever derives you need on it, and let the `bitflags!` macro generate the flags
-//! API for it. The derives then see a plain newtype around an integer, so `Type`, `Value` and
-//! `OwnedValue` delegate to that integer. So do serde's derived `Serialize` and `Deserialize`: they
-//! (de)serialize a newtype struct as its single field, which zgvariant passes straight through to
-//! the integer, so the wire format is the integer's. No `serde` feature of the `bitflags` crate is
-//! needed.
+//! API for it. The derives then see a plain newtype around an integer, so `Type`, `Variant` and
+//! `OwnedVariant` delegate to that integer. So do serde's derived `Serialize` and `Deserialize`:
+//! they (de)serialize a newtype struct as its single field, which zgvariant passes straight through
+//! to the integer, so the wire format is the integer's. No `serde` feature of the `bitflags` crate
+//! is needed.
 //!
 //! Only the macro-generated form of `bitflags!` needs that feature. Its serde support would use a
 //! textual `"A | B"` form for human-readable formats, but zgvariant's (de)serializers are not
@@ -20,9 +20,11 @@ use std::{collections::HashMap, fmt};
 
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
-use zgvariant::{BE, Basic, LE, OwnedValue, Signature, Type, Value, serialized::Context, to_bytes};
+use zgvariant::{
+    BE, Basic, LE, OwnedVariant, Signature, Type, Variant, serialized::Context, to_bytes,
+};
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Type, Value, OwnedValue)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Type, Variant, OwnedVariant)]
 struct Flags(u32);
 
 bitflags! {
@@ -45,7 +47,7 @@ impl fmt::Debug for Flags {
     }
 }
 
-// The derives don't implement `Basic`, which converting a dictionary `Value` into a `HashMap`
+// The derives don't implement `Basic`, which converting a dictionary `Variant` into a `HashMap`
 // requires of the key type. It's needed for nothing else (see `value_conversions`).
 impl Basic for Flags {
     const SIGNATURE_CHAR: char = 'u';
@@ -142,25 +144,25 @@ fn flags_nested_in_other_types() {
 fn value_conversions() {
     let flags = Flags::TWO | Flags::FOUR;
 
-    // Flags -> Value -> Flags.
-    let value = Value::from(flags);
-    assert_eq!(value, Value::U32(0x6));
+    // Flags -> Variant -> Flags.
+    let value = Variant::from(flags);
+    assert_eq!(value, Variant::U32(0x6));
     assert_eq!(value.value_signature().to_string(), "u");
     assert_eq!(Flags::try_from(value).unwrap(), flags);
 
     // A value of any other type is rejected.
-    assert!(Flags::try_from(Value::from("not flags")).is_err());
-    assert!(Flags::try_from(Value::from(0x6u8)).is_err());
+    assert!(Flags::try_from(Variant::from("not flags")).is_err());
+    assert!(Flags::try_from(Variant::from(0x6u8)).is_err());
 
-    // The same through `OwnedValue`.
-    let owned = OwnedValue::try_from(flags).unwrap();
-    assert_eq!(*owned, Value::U32(0x6));
+    // The same through `OwnedVariant`.
+    let owned = OwnedVariant::try_from(flags).unwrap();
+    assert_eq!(*owned, Variant::U32(0x6));
     assert_eq!(Flags::try_from(owned).unwrap(), flags);
 
-    // A plain integer value is a valid flags value, going via `OwnedValue` as well.
-    let owned: OwnedValue = Value::from(0x2u32).try_into().unwrap();
+    // A plain integer value is a valid flags value, going via `OwnedVariant` as well.
+    let owned: OwnedVariant = Variant::from(0x2u32).try_into().unwrap();
     assert_eq!(Flags::try_from(owned).unwrap(), Flags::TWO);
-    let owned: OwnedValue = Value::from("not flags").try_into().unwrap();
+    let owned: OwnedVariant = Variant::from("not flags").try_into().unwrap();
     assert!(Flags::try_from(owned).is_err());
 
     // As the key of a dictionary value, which is why `Basic` is implemented above.
@@ -168,19 +170,17 @@ fn value_conversions() {
         (Flags::ONE, "one".to_string()),
         (Flags::FOUR, "four".to_string()),
     ]);
-    let value = Value::from(dict.clone());
+    let value = Variant::from(dict.clone());
     assert_eq!(value.value_signature().to_string(), "a{us}");
     assert_eq!(<HashMap<Flags, String>>::try_from(value).unwrap(), dict);
 
-    // Flags inside a variant make a round trip through the wire. A `Value` that was deserialized
-    // from a buffer borrows from it, whereas the `Value` derive converts from `Value<'static>` for
-    // a type without lifetime parameters. So convert it to an owned value first.
+    // Flags inside a variant make a round trip through the wire. A `Variant` that was deserialized
+    // from a buffer borrows from it, which the conversion to the flags type is fine with.
     let ctxt = Context::new(LE, 0);
-    let encoded = to_bytes(ctxt, &Value::from(flags)).unwrap();
-    let decoded: Value<'_> = encoded.deserialize().unwrap().0;
+    let encoded = to_bytes(ctxt, &Variant::from(flags)).unwrap();
+    let decoded: Variant<'_> = encoded.deserialize().unwrap().0;
     assert_eq!(decoded.value_signature().to_string(), "u");
-    let owned = decoded.try_into_owned().unwrap();
-    assert_eq!(Flags::try_from(owned).unwrap(), flags);
+    assert_eq!(Flags::try_from(decoded).unwrap(), flags);
 }
 
 /// Unlike with `enumflags2`, whose `BitFlags` type rejects bits that don't belong to any flag, a
@@ -194,17 +194,17 @@ fn unknown_bits_are_retained() {
     // The constructor that only accepts known bits would refuse these bits...
     assert_eq!(Flags::from_bits(unknown), None);
 
-    // ... but deserializing, as well as converting from a `Value`, keeps them.
+    // ... but deserializing, as well as converting from a `Variant`, keeps them.
     let encoded = to_bytes(ctxt, &unknown).unwrap();
     let decoded: Flags = encoded.deserialize().unwrap().0;
     assert_eq!(decoded.bits(), unknown);
     assert!(decoded.contains(Flags::ONE));
     assert!(!decoded.contains(Flags::TWO));
 
-    let from_value = Flags::try_from(Value::from(unknown)).unwrap();
+    let from_value = Flags::try_from(Variant::from(unknown)).unwrap();
     assert_eq!(from_value, decoded);
 
-    let owned: OwnedValue = Value::from(unknown).try_into().unwrap();
+    let owned: OwnedVariant = Variant::from(unknown).try_into().unwrap();
     assert_eq!(Flags::try_from(owned).unwrap(), decoded);
 
     // They survive being serialized again, too.

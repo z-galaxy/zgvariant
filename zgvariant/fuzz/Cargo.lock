@@ -170,7 +170,7 @@ dependencies = [
 [[package]]
 name = "zbus_utils"
 version = "6.0.0"
-source = "git+https://github.com/z-galaxy/zbus#70a8676b82e3a03e54add767b1e8894d743f5165"
+source = "git+https://github.com/z-galaxy/zbus#dcfc42df0d914fc1bcc0871e8055f5854afab2af"
 dependencies = [
  "proc-macro2",
  "quote",

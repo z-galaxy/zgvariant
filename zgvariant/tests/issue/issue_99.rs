@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use zgvariant::{LE, Type, Value, serialized::Context, to_bytes_for_signature};
+use zgvariant::{LE, Type, Variant, serialized::Context, to_bytes_for_signature};
 
 #[test]
 fn issue_99() {
     #[derive(Deserialize, Serialize, Type, PartialEq, Debug)]
-    struct ZVStruct<'s>(#[serde(borrow)] HashMap<&'s str, Value<'s>>);
+    struct ZVStruct<'s>(#[serde(borrow)] HashMap<&'s str, Variant<'s>>);
 
     let mut dict = HashMap::new();
-    dict.insert("hi", Value::from("hello"));
-    dict.insert("bye", Value::from("then"));
+    dict.insert("hi", Variant::from("hello"));
+    dict.insert("bye", Variant::from("then"));
 
     let element = ZVStruct(dict);
 

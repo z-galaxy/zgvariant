@@ -1,5 +1,5 @@
 use std::vec;
-use zgvariant::{Array, LE, Type, Value, serialized::Context, to_bytes};
+use zgvariant::{Array, LE, Type, Variant, serialized::Context, to_bytes};
 
 #[macro_use]
 mod common {
@@ -38,13 +38,13 @@ fn array_value() {
     let decoded: Vec<u8> = encoded.deserialize().unwrap().0;
     assert_eq!(&decoded.as_slice(), &[77u8, 88]);
 
-    // As Value
-    let v: Value<'_> = ay[..].into();
+    // As Variant
+    let v: Variant<'_> = ay[..].into();
     assert_eq!(v.value_signature(), "ay");
     let encoded = to_bytes(ctxt, &v).unwrap();
     assert_eq!(encoded.len(), 5);
-    let v = encoded.deserialize::<Value<'_>>().unwrap().0;
-    if let Value::Array(array) = v {
+    let v = encoded.deserialize::<Variant<'_>>().unwrap().0;
+    if let Variant::Array(array) = v {
         assert_eq!(*array.element_signature(), "y");
         assert_eq!(array.len(), 2);
         assert_eq!(array.get(0).unwrap(), Some(77u8));
@@ -58,8 +58,8 @@ fn array_value() {
     let encoded = to_bytes(ctxt, &vec).unwrap();
     assert_eq!(encoded.len(), 2);
 
-    // Vec as Value
-    let v: Value<'_> = Array::from(&vec).into();
+    // Vec as Variant
+    let v: Variant<'_> = Array::from(&vec).into();
     assert_eq!(v.value_signature(), "ay");
     let encoded = to_bytes(ctxt, &v).unwrap();
     assert_eq!(encoded.len(), 5);
@@ -71,12 +71,12 @@ fn array_value() {
     let at_decoded = gv_encoded.deserialize::<Vec<u64>>().unwrap().0;
     assert_eq!(at_decoded.len(), 0);
 
-    // As Value
-    let v: Value<'_> = at[..].into();
+    // As Variant
+    let v: Variant<'_> = at[..].into();
     let gv_encoded = to_bytes(ctxt, &v).unwrap();
     assert_eq!(gv_encoded.len(), 3);
-    let v = gv_encoded.deserialize::<Value<'_>>().unwrap().0;
-    if let Value::Array(array) = v {
+    let v = gv_encoded.deserialize::<Variant<'_>>().unwrap().0;
+    if let Variant::Array(array) = v {
         assert_eq!(*array.element_signature(), "t");
         assert_eq!(array.len(), 0);
     } else {
@@ -98,22 +98,22 @@ fn array_value() {
     let decoded = encoded.deserialize::<Vec<String>>().unwrap().0;
     assert_eq!(decoded.as_slice(), as_.as_slice());
 
-    // As Value
-    let v: Value<'_> = as_[..].into();
+    // As Variant
+    let v: Variant<'_> = as_[..].into();
     assert_eq!(v.value_signature(), "as");
     let encoded = to_bytes(ctxt, &v).unwrap();
     assert_eq!(encoded.len(), 28);
     let v = encoded.deserialize().unwrap().0;
-    if let Value::Array(array) = v {
+    if let Variant::Array(array) = v {
         assert_eq!(*array.element_signature(), "s");
         assert_eq!(array.len(), 4);
-        assert_eq!(array[0], Value::new("Hello"));
-        assert_eq!(array[1], Value::new("World"));
+        assert_eq!(array[0], Variant::new("Hello"));
+        assert_eq!(array[1], Variant::new("World"));
     } else {
         panic!();
     }
 
-    let v: Value<'_> = as_[..].into();
+    let v: Variant<'_> = as_[..].into();
     let a: Array<'_> = v.try_into().unwrap();
     let _ve: Vec<String> = a.try_into().unwrap();
 
@@ -153,26 +153,26 @@ fn array_value() {
     assert_eq!(as_[1], "World");
     assert_eq!(r.3, "hello");
 
-    // As Value
-    let v: Value<'_> = ar[..].into();
+    // As Variant
+    let v: Variant<'_> = ar[..].into();
     assert_eq!(v.value_signature(), "a(yu(xbxas)s)");
     let gv_encoded = to_bytes(ctxt, &v).unwrap();
     assert_eq!(gv_encoded.len(), 68);
-    let v: Value<'_> = gv_encoded.deserialize().unwrap().0;
-    if let Value::Array(array) = v {
+    let v: Variant<'_> = gv_encoded.deserialize().unwrap().0;
+    if let Variant::Array(array) = v {
         assert_eq!(*array.element_signature(), "(yu(xbxas)s)");
         assert_eq!(array.len(), 1);
         let r = &array.get(0).unwrap().unwrap();
-        if let Value::Structure(r) = r {
+        if let Variant::Structure(r) = r {
             let fields = r.fields();
-            assert_eq!(fields[0], Value::U8(u8::MAX));
-            assert_eq!(fields[1], Value::U32(u32::MAX));
-            if let Value::Structure(r) = &fields[2] {
+            assert_eq!(fields[0], Variant::U8(u8::MAX));
+            assert_eq!(fields[1], Variant::U32(u32::MAX));
+            if let Variant::Structure(r) = &fields[2] {
                 let fields = r.fields();
-                assert_eq!(fields[0], Value::I64(i64::MAX));
-                assert_eq!(fields[1], Value::Bool(true));
-                assert_eq!(fields[2], Value::I64(i64::MAX));
-                if let Value::Array(as_) = &fields[3] {
+                assert_eq!(fields[0], Variant::I64(i64::MAX));
+                assert_eq!(fields[1], Variant::Bool(true));
+                assert_eq!(fields[2], Variant::I64(i64::MAX));
+                if let Variant::Array(as_) = &fields[3] {
                     assert_eq!(as_.len(), 2);
                     assert_eq!(as_.get(0).unwrap(), Some("Hello"));
                     assert_eq!(as_.get(1).unwrap(), Some("World"));
@@ -182,7 +182,7 @@ fn array_value() {
             } else {
                 panic!();
             }
-            assert_eq!(fields[3], Value::new("hello"));
+            assert_eq!(fields[3], Variant::new("hello"));
         } else {
             panic!();
         }
@@ -210,15 +210,15 @@ fn array_value() {
     let as2: Vec<String> = gv_encoded.deserialize().unwrap().0;
     assert_eq!(as2, as_);
 
-    // Test conversion of Array of Value to Vec<Value>
-    let v = Value::new(vec![Value::new(43), Value::new("bonjour")]);
+    // Test conversion of Array of Variant to Vec<Variant>
+    let v = Variant::new(vec![Variant::new(43), Variant::new("bonjour")]);
     let av = <Array<'_>>::try_from(v).unwrap();
-    let av = <Vec<Value<'_>>>::try_from(av).unwrap();
-    assert_eq!(av[0], Value::new(43));
-    assert_eq!(av[1], Value::new("bonjour"));
+    let av = <Vec<Variant<'_>>>::try_from(av).unwrap();
+    assert_eq!(av[0], Variant::new(43));
+    assert_eq!(av[1], Variant::new("bonjour"));
 
     let vec = vec![1, 2];
-    let val = Value::new(&vec);
+    let val = Variant::new(&vec);
     assert_eq!(TryInto::<Vec<i32>>::try_into(val).unwrap(), vec);
 
     // Empty array should be treated as a unit type, which is encoded as a u8.
