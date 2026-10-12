@@ -68,9 +68,11 @@ protect_breaking_commits = true
 
 # Commit message preprocessors (applied in order).
 commit_preprocessors = [
-    # Remove package prefix (e.g., "zb: " or "zvariant_derive: ") but keep gimoji emojis.
+    # Remove the package prefix that commits used to carry after the gimoji (e.g. "zgv,zgvd: "),
+    # and Renovate's "micro: " one, but keep the gimoji. Only these prefixes, so that the start of
+    # a subject that merely contains a colon ("🐛 Fix a crash: …") survives.
     # Pattern handles emojis with variation selectors (U+FE0F) and ZWJ sequences (U+200D).
-    { pattern = "^((?:[\\p{Emoji_Presentation}\\p{Extended_Pictographic}](?:\\u{FE0F}|\\u{200D})?)+) [\\w, -]+: ", replace = "$1 " },
+    { pattern = "^((?:[\\p{Emoji_Presentation}\\p{Extended_Pictographic}](?:\\u{FE0F}|\\u{200D})?)+) +(?:micro|zgvd?(?:,zgvd?)*): ", replace = "$1 " },
     # Extract issue refs from commit body using $COMMIT_SHA.
     # Matches: "Fixes #123", "Closes issue #123", "Resolves bug #123", etc.
     # Appends issue ref with "||" delimiter so template can insert period before it.
