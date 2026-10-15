@@ -1,12 +1,11 @@
 use crate::{Signature, Type, impl_type_with_repr};
-use zvariant_utils::serialized::Format;
 
 /// Trait for basic types.
 ///
 /// All basic types are also [`Type`] implementers.
 ///
 /// [`Type`]: trait.Type.html
-/// [`Value`]: enum.Value.html
+/// [`Variant`]: enum.Variant.html
 pub trait Basic: Type {
     /// The type signature, as a character.
     const SIGNATURE_CHAR: char;
@@ -18,7 +17,7 @@ pub trait Basic: Type {
     /// The default implementation covers all possible cases so you should never need to override
     /// it.
     fn alignment() -> usize {
-        Self::SIGNATURE.alignment(Format::GVariant)
+        Self::SIGNATURE.alignment_gvariant()
     }
 }
 

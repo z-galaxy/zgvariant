@@ -1,6 +1,6 @@
 use crate::{Basic, Type};
 
-pub use zvariant_utils::signature::*;
+pub use zbus_utils::signature::*;
 
 impl From<Error> for crate::Error {
     fn from(e: Error) -> Self {
@@ -17,8 +17,8 @@ impl Basic for Signature {
     const SIGNATURE_STR: &'static str = "g";
 }
 
-impl From<Signature> for crate::Value<'static> {
+impl From<Signature> for crate::Variant<'static> {
     fn from(value: Signature) -> Self {
-        crate::Value::Signature(value)
+        crate::Variant::Signature(value)
     }
 }

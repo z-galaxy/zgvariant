@@ -4,16 +4,19 @@
 fn ostree_de() {
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
-    use zgvariant::{LE, Type, Value, serialized::Context};
+    use zgvariant::{LE, Type, Variant, serialized::Context};
 
     #[derive(Deserialize, Serialize, Type, PartialEq, Debug)]
-    struct Summary<'a>(Vec<Repo<'a>>, #[serde(borrow)] HashMap<&'a str, Value<'a>>);
+    struct Summary<'a>(
+        Vec<Repo<'a>>,
+        #[serde(borrow)] HashMap<&'a str, Variant<'a>>,
+    );
 
     #[derive(Deserialize, Serialize, Type, PartialEq, Debug)]
     struct Repo<'a>(&'a str, #[serde(borrow)] Metadata<'a>);
 
     #[derive(Deserialize, Serialize, Type, PartialEq, Debug)]
-    struct Metadata<'a>(u64, Vec<u8>, #[serde(borrow)] HashMap<&'a str, Value<'a>>);
+    struct Metadata<'a>(u64, Vec<u8>, #[serde(borrow)] HashMap<&'a str, Variant<'a>>);
 
     let encoded = std::fs::read("../test-data/flatpak-summary.dump").unwrap();
     let ctxt = Context::new(LE, 0);

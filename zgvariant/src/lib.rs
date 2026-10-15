@@ -48,8 +48,8 @@ pub use crate::structure::*;
 mod maybe;
 pub use crate::maybe::*;
 
-mod value;
-pub use value::*;
+mod variant;
+pub use variant::*;
 
 mod error;
 pub use error::*;
@@ -61,21 +61,23 @@ pub use r#type::*;
 mod tuple;
 pub use tuple::*;
 
-mod from_value;
+mod from_variant;
 
-mod into_value;
+mod into_variant;
 
-mod owned_value;
-pub use owned_value::*;
+mod owned_variant;
+pub use owned_variant::*;
 
 mod framing_offset_size;
 mod framing_offsets;
 
 mod container_depths;
 
-pub mod as_value;
+pub mod as_variant;
 
-pub use zgvariant_derive::{DeserializeDict, OwnedValue, SerializeDict, Type, Value, signature};
+pub use zgvariant_derive::{
+    DeserializeDict, OwnedVariant, SerializeDict, Type, Variant, signature,
+};
 
 // Required for the macros to function within this crate.
 extern crate self as zgvariant;

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use zgvariant::{Value, serialized::Context};
+use zgvariant::{Variant, serialized::Context};
 
 #[test]
 fn struct_byte_array() {
@@ -9,20 +9,20 @@ fn struct_byte_array() {
     // zvariant (see https://github.com/z-galaxy/zbus/issues for the upstream behaviour), which
     // isn't what this test is about.
     let mut map = HashMap::new();
-    map.insert("key".to_string(), Value::new("value"));
-    let value: (Vec<u8>, HashMap<String, Value<'_>>) = (vec![1, 2, 3], map);
+    map.insert("key".to_string(), Variant::new("value"));
+    let value: (Vec<u8>, HashMap<String, Variant<'_>>) = (vec![1, 2, 3], map);
     let value = zgvariant::to_bytes(ctxt, &value).unwrap();
     #[cfg(feature = "serde_bytes")]
-    let (bytes, map): (&serde_bytes::Bytes, HashMap<&str, Value<'_>>) = value
+    let (bytes, map): (&serde_bytes::Bytes, HashMap<&str, Variant<'_>>) = value
         .deserialize()
         .expect("Could not deserialize serde_bytes::Bytes in struct.")
         .0;
     #[cfg(not(feature = "serde_bytes"))]
-    let (bytes, map): (&[u8], HashMap<&str, Value<'_>>) = value
+    let (bytes, map): (&[u8], HashMap<&str, Variant<'_>>) = value
         .deserialize()
         .expect("Could not deserialize u8 slice in struct")
         .0;
 
-    assert_eq!(&bytes[..], [1u8, 2, 3]);
-    assert_eq!(map["key"], Value::new("value"));
+    assert_eq!(*bytes, [1u8, 2, 3]);
+    assert_eq!(map["key"], Variant::new("value"));
 }

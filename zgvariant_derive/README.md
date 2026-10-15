@@ -2,7 +2,7 @@
 
 [![](https://docs.rs/zgvariant_derive/badge.svg)](https://docs.rs/zgvariant_derive/) [![](https://img.shields.io/crates/v/zgvariant_derive)](https://crates.io/crates/zgvariant_derive)
 
-Derive macros for the [zgvariant] crate: `Type`, `Value`, `OwnedValue`, `SerializeDict` and
+Derive macros for the [zgvariant] crate: `Type`, `Variant`, `OwnedVariant`, `SerializeDict` and
 `DeserializeDict`, plus the `signature!` proc macro.
 
 The `zgvariant` crate re-exports everything from here, so you normally don't need to depend on

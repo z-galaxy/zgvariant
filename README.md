@@ -40,9 +40,9 @@ let decoded: Point = encoded.deserialize().unwrap().0;
 assert_eq!(decoded, point);
 ```
 
-Have a look at the [`Type`], [`Value`] and [`OwnedValue`] documentation for more on GVariant's
-type system and the generic `Value` container, and at [zgvariant_derive] for the full set of
-derive macros (`Type`, `Value`, `OwnedValue`, `SerializeDict`, `DeserializeDict`) and the
+Have a look at the [`Type`], [`Variant`] and [`OwnedVariant`] documentation for more on GVariant's
+type system and the generic `Variant` container, and at [zgvariant_derive] for the full set of
+derive macros (`Type`, `Variant`, `OwnedVariant`, `SerializeDict`, `DeserializeDict`) and the
 `signature!` macro.
 
 ## Optional features
@@ -70,9 +70,11 @@ integer, so both the signature and the encoding are those of the integer:
 ```rust
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
-use zgvariant::{serialized::Context, to_bytes, Basic, OwnedValue, Type, Value, LE};
+use zgvariant::{serialized::Context, to_bytes, Basic, OwnedVariant, Type, Variant, LE};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Type, Value, OwnedValue)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Type, Variant, OwnedVariant,
+)]
 struct Permissions(u32);
 
 bitflags! {
@@ -82,7 +84,7 @@ bitflags! {
     }
 }
 
-// Only needed to use `Permissions` as a dictionary key when converting from a `Value`.
+// Only needed to use `Permissions` as a dictionary key when converting from a `Variant`.
 impl Basic for Permissions {
     const SIGNATURE_CHAR: char = 'u';
     const SIGNATURE_STR: &'static str = "u";
@@ -96,7 +98,7 @@ assert_eq!(encoded.bytes(), 3u32.to_le_bytes());
 let decoded: Permissions = encoded.deserialize().unwrap().0;
 assert_eq!(decoded, permissions);
 
-let value = Value::from(permissions);
+let value = Variant::from(permissions);
 assert_eq!(Permissions::try_from(value).unwrap(), permissions);
 ```
 
@@ -107,15 +109,14 @@ the raw integer (`Permissions(3)`), whereas implementing it with `bitflags::pars
 prints the flag names. That function writes nothing for a value with no flags set, so print `0x0`
 yourself in that case if you'd rather not get an empty string.
 
-Converting a `Value` that borrows from a buffer (for example one you deserialized) into such a type
-requires calling `try_into_owned()` on it first: for a type without lifetime parameters, the `Value`
-derive converts only from `Value<'static>`, whereas the `enumflags2` feature accepts any lifetime.
-Using the type as a dictionary key in conversions from `Value` requires `Basic`, which the derives
-don't provide, hence the `impl Basic` above.
+The derives convert such a newtype from and to a `Variant` of any lifetime, so a `Variant` that
+borrows from a buffer (for example one you deserialized) converts without an owned copy of it.
+Using the type as a dictionary key in conversions from `Variant` requires `Basic`, which the
+derives don't provide, hence the `impl Basic` above.
 
 The macro-generated form (`bitflags! { struct Permissions: u32 { ... } }`) works too, as long as you
 enable the `serde` feature of `bitflags` and add `#[zgvariant(signature = "u")]` to the type, but it
-can't derive `Value` and `OwnedValue`. Since zgvariant's (de)serializers are not human-readable,
+can't derive `Variant` and `OwnedVariant`. Since zgvariant's (de)serializers are not human-readable,
 that form gets the plain integer rather than the `"READ | WRITE"` string that `bitflags` uses for
 human-readable formats.
 
@@ -130,13 +131,19 @@ The `enumflags2` feature remains for compatibility with existing code that uses
 | `zvariant::...` imports             | `zgvariant::...`                             |
 | `Context::new_gvariant(endian, n)`  | `Context::new(endian, n)`                    |
 | `serialized::Format` dispatch       | gone — there is only one format              |
-| `option-as-array` feature           | gone — `Option<T>` is always a GVariant' `maybe` type|
+| `option-as-array` feature           | gone — `Option<T>` is always a `maybe` type  |
 | `Value::Fd` / fd passing            | not supported (D-Bus wire concept)           |
 | `#[zvariant(...)]` derive attrs     | still accepted; `#[zgvariant(...)]` preferred|
-| `SerializeValue`/`DeserializeValue` | gone — `as_value::{Serialize, Deserialize}`  |
+| `Value`, `OwnedValue`               | `Variant`, `OwnedVariant`                    |
+| `Value::Value` (variant in variant) | `Variant::Variant`                           |
+| `#[derive(Value, OwnedValue)]`      | `#[derive(Variant, OwnedVariant)]`           |
+| `as_value`                          | `as_variant`                                 |
+| `SerializeValue`/`DeserializeValue` | gone — `as_variant::{Serialize, Deserialize}`|
 
-`Signature` is the same type in both crates (re-exported from `zvariant_utils`), so signatures
-can be passed between zvariant- and zgvariant-using code freely.
+`Signature` is the same type as zbus 6's `zbus::wire::Signature` — both re-export it from
+`zbus_utils` — so signatures can be passed between zbus- and zgvariant-using code freely.
+zvariant 5 and zgvariant 1.x shared it through `zvariant_utils` instead; a graph mixing either
+of those with this release carries two unrelated `Signature` types.
 
 Note: a type cannot derive both zvariant's and zgvariant's `Type` in the same scope without
 renaming one import, since the derive macros share their names.
@@ -151,8 +158,8 @@ MIT license, see [LICENSE].
 [zbus]: https://github.com/z-galaxy/zbus
 [tutorial]: https://serde.rs/
 [`Type`]: https://docs.rs/zgvariant/latest/zgvariant/trait.Type.html
-[`Value`]: https://docs.rs/zgvariant/latest/zgvariant/enum.Value.html
-[`OwnedValue`]: https://docs.rs/zgvariant/latest/zgvariant/struct.OwnedValue.html
+[`Variant`]: https://docs.rs/zgvariant/latest/zgvariant/enum.Variant.html
+[`OwnedVariant`]: https://docs.rs/zgvariant/latest/zgvariant/struct.OwnedVariant.html
 [zgvariant_derive]: https://docs.rs/zgvariant_derive/latest/zgvariant_derive/
 [`arrayvec::ArrayVec`]: https://docs.rs/arrayvec/latest/arrayvec/struct.ArrayVec.html
 [`arrayvec::ArrayString`]: https://docs.rs/arrayvec/latest/arrayvec/struct.ArrayString.html

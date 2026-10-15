@@ -1,4 +1,4 @@
-//! Utilities to (de)serialize a value as a [`enum@crate::Value`].
+//! Utilities to (de)serialize a value as a [`enum@crate::Variant`].
 //!
 //! This is mainly useful for constructing a strongly-typed API for dealing with dictionaries
 //! containing string keys and variant values (`a{sv}` in signature notation) See the relevant
@@ -11,7 +11,7 @@ pub use deserialize::{Deserialize, deserialize};
 mod serialize;
 pub use serialize::{Serialize, serialize};
 
-/// Utilities to (de)serialize an optional value as a [`enum@crate::Value`].
+/// Utilities to (de)serialize an optional value as a [`enum@crate::Variant`].
 pub mod optional {
     use super::*;
 
