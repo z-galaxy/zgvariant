@@ -5,7 +5,7 @@ use std::{collections::HashMap, hint::black_box, vec};
 
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use zgvariant::{LE, Type, Value, serialized::Context, to_bytes};
+use zgvariant::{LE, Type, Variant, serialized::Context, to_bytes};
 
 macro_rules! benchmark {
     ($c:ident, $data:ident, $data_type:ty, $func_prefix:literal) => {
@@ -61,7 +61,7 @@ fn big_array(c: &mut Criterion) {
     for s in &strings {
         string_array.push(s.as_str());
         ass_dict.insert(s.as_str(), s.as_str());
-        asv_dict.insert(s.as_str(), Value::from(s.as_str()));
+        asv_dict.insert(s.as_str(), Variant::from(s.as_str()));
     }
 
     let structure = BigArrayStruct {
@@ -161,7 +161,7 @@ struct BigArrayDictStruct<'s> {
 struct BigArrayDictVariantStruct<'s> {
     #[serde(borrow)]
     array_struct: BigArrayStruct<'s>,
-    dict: HashMap<&'s str, Value<'s>>,
+    dict: HashMap<&'s str, Variant<'s>>,
 }
 
 #[cfg(feature = "serde_bytes")]

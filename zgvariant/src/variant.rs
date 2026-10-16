@@ -18,7 +18,7 @@ use serde::{
 };
 
 use crate::{
-    Array, Basic, Dict, DynamicType, Maybe, ObjectPath, OwnedValue, Signature, Str, Structure,
+    Array, Basic, Dict, DynamicType, Maybe, ObjectPath, OwnedVariant, Signature, Str, Structure,
     StructureBuilder, Type, array_display_fmt, dict_display_fmt, maybe_display_fmt,
     structure_display_fmt, utils::*,
 };
@@ -32,17 +32,17 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use zgvariant::{to_bytes, serialized::Context, Value, LE};
+/// use zgvariant::{to_bytes, serialized::Context, Variant, LE};
 ///
-/// // Create a Value from an i16
-/// let v = Value::new(i16::MAX);
+/// // Create a Variant from an i16
+/// let v = Variant::new(i16::MAX);
 ///
 /// // Encode it
 /// let ctxt = Context::new(LE, 0);
 /// let encoding = to_bytes(ctxt, &v).unwrap();
 ///
 /// // Decode it back
-/// let v: Value = encoding.deserialize().unwrap().0;
+/// let v: Variant = encoding.deserialize().unwrap().0;
 ///
 /// // Check everything is as expected
 /// assert_eq!(i16::try_from(&v).unwrap(), i16::MAX);
@@ -52,15 +52,15 @@ use crate::{
 ///
 /// ```
 /// use zgvariant::{to_bytes, serialized::Context, LE};
-/// use zgvariant::{Structure, Value, Str};
+/// use zgvariant::{Structure, Variant, Str};
 ///
-/// // Create a Value from a tuple this time
-/// let v = Value::new((i16::MAX, "hello", true));
+/// // Create a Variant from a tuple this time
+/// let v = Variant::new((i16::MAX, "hello", true));
 ///
 /// // Same drill as previous example
 /// let ctxt = Context::new(LE, 0);
 /// let encoding = to_bytes(ctxt, &v).unwrap();
-/// let v: Value = encoding.deserialize().unwrap().0;
+/// let v: Variant = encoding.deserialize().unwrap().0;
 ///
 /// // Check everything is as expected
 /// let s = Structure::try_from(v).unwrap();
@@ -70,7 +70,7 @@ use crate::{
 /// );
 /// ```
 #[derive(Debug, PartialEq, PartialOrd)]
-pub enum Value<'a> {
+pub enum Variant<'a> {
     // Simple types
     U8(u8),
     Bool(bool),
@@ -84,7 +84,7 @@ pub enum Value<'a> {
     Str(Str<'a>),
     Signature(Signature),
     ObjectPath(ObjectPath<'a>),
-    Value(Box<Value<'a>>),
+    Variant(Box<Variant<'a>>),
 
     // Container types
     Array(Array<'a>),
@@ -93,7 +93,11 @@ pub enum Value<'a> {
     Maybe(Maybe<'a>),
 }
 
-impl Hash for Value<'_> {
+/// Deprecated alias of [`Variant`], kept for code written against zgvariant 1.x.
+#[deprecated(since = "2.0.0", note = "renamed to `Variant`")]
+pub type Value<'a> = Variant<'a>;
+
+impl Hash for Variant<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         discriminant(self).hash(state);
         match self {
@@ -112,7 +116,7 @@ impl Hash for Value<'_> {
             Self::Str(inner) => inner.hash(state),
             Self::Signature(inner) => inner.hash(state),
             Self::ObjectPath(inner) => inner.hash(state),
-            Self::Value(inner) => inner.hash(state),
+            Self::Variant(inner) => inner.hash(state),
             Self::Array(inner) => inner.hash(state),
             Self::Dict(inner) => inner.hash(state),
             Self::Structure(inner) => inner.hash(state),
@@ -121,9 +125,9 @@ impl Hash for Value<'_> {
     }
 }
 
-impl Eq for Value<'_> {}
+impl Eq for Variant<'_> {}
 
-impl Ord for Value<'_> {
+impl Ord for Variant<'_> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.partial_cmp(other)
             .unwrap_or_else(|| match (self, other) {
@@ -140,47 +144,47 @@ impl Ord for Value<'_> {
 macro_rules! serialize_value {
     ($self:ident $serializer:ident.$method:ident $($first_arg:expr)*) => {
         match $self {
-            Value::U8(value) => $serializer.$method($($first_arg,)* value),
-            Value::Bool(value) => $serializer.$method($($first_arg,)* value),
-            Value::I16(value) => $serializer.$method($($first_arg,)* value),
-            Value::U16(value) => $serializer.$method($($first_arg,)* value),
-            Value::I32(value) => $serializer.$method($($first_arg,)* value),
-            Value::U32(value) => $serializer.$method($($first_arg,)* value),
-            Value::I64(value) => $serializer.$method($($first_arg,)* value),
-            Value::U64(value) => $serializer.$method($($first_arg,)* value),
-            Value::F64(value) => $serializer.$method($($first_arg,)* value),
-            Value::Str(value) => $serializer.$method($($first_arg,)* value),
-            Value::Signature(value) => $serializer.$method($($first_arg,)* value),
-            Value::ObjectPath(value) => $serializer.$method($($first_arg,)* value),
-            Value::Value(value) => $serializer.$method($($first_arg,)* value),
+            Variant::U8(value) => $serializer.$method($($first_arg,)* value),
+            Variant::Bool(value) => $serializer.$method($($first_arg,)* value),
+            Variant::I16(value) => $serializer.$method($($first_arg,)* value),
+            Variant::U16(value) => $serializer.$method($($first_arg,)* value),
+            Variant::I32(value) => $serializer.$method($($first_arg,)* value),
+            Variant::U32(value) => $serializer.$method($($first_arg,)* value),
+            Variant::I64(value) => $serializer.$method($($first_arg,)* value),
+            Variant::U64(value) => $serializer.$method($($first_arg,)* value),
+            Variant::F64(value) => $serializer.$method($($first_arg,)* value),
+            Variant::Str(value) => $serializer.$method($($first_arg,)* value),
+            Variant::Signature(value) => $serializer.$method($($first_arg,)* value),
+            Variant::ObjectPath(value) => $serializer.$method($($first_arg,)* value),
+            Variant::Variant(value) => $serializer.$method($($first_arg,)* value),
 
             // Container types
-            Value::Array(value) => $serializer.$method($($first_arg,)* value),
-            Value::Dict(value) => $serializer.$method($($first_arg,)* value),
-            Value::Structure(value) => $serializer.$method($($first_arg,)* value),
-            Value::Maybe(value) => $serializer.$method($($first_arg,)* value),
+            Variant::Array(value) => $serializer.$method($($first_arg,)* value),
+            Variant::Dict(value) => $serializer.$method($($first_arg,)* value),
+            Variant::Structure(value) => $serializer.$method($($first_arg,)* value),
+            Variant::Maybe(value) => $serializer.$method($($first_arg,)* value),
         }
     }
 }
 
-impl<'a> Value<'a> {
-    /// Make a [`Value`] for a given value.
+impl<'a> Variant<'a> {
+    /// Make a [`Variant`] for a given value.
     ///
     /// In general, you can use [`Into`] trait on basic types, except
-    /// when you explicitly need to wrap [`Value`] itself, in which
+    /// when you explicitly need to wrap [`Variant`] itself, in which
     /// case this constructor comes handy.
     ///
     /// # Examples
     ///
     /// ```
-    /// use zgvariant::Value;
+    /// use zgvariant::Variant;
     ///
-    /// let s = Value::new("hello");
-    /// let u: Value = 51.into();
+    /// let s = Variant::new("hello");
+    /// let u: Variant = 51.into();
     /// assert_ne!(s, u);
     /// ```
     ///
-    /// [`Value`]: enum.Value.html
+    /// [`Variant`]: enum.Variant.html
     /// [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
     pub fn new<T>(value: T) -> Self
     where
@@ -188,109 +192,128 @@ impl<'a> Value<'a> {
     {
         // With specialization, we wouldn't have this
         if value.signature() == VARIANT_SIGNATURE_STR {
-            Self::Value(Box::new(value.into()))
+            Self::Variant(Box::new(value.into()))
         } else {
             value.into()
         }
     }
 
+    /// Create a [`Variant::Variant`], a variant holding another variant.
+    ///
+    /// This is the constructor that `Value::Value` was before `Value` was renamed to `Variant`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![allow(deprecated)]
+    /// use zgvariant::Variant;
+    ///
+    /// let nested = Variant::Value(Box::new(Variant::U32(42)));
+    /// assert_eq!(nested, Variant::Variant(Box::new(Variant::U32(42))));
+    /// ```
+    #[deprecated(since = "2.0.0", note = "use `Variant::Variant` instead")]
+    #[allow(non_snake_case)]
+    pub fn Value(inner: Box<Variant<'a>>) -> Self {
+        Self::Variant(inner)
+    }
+
     /// Try to create an owned version of `self`.
-    pub fn try_to_owned(&self) -> crate::Result<OwnedValue> {
-        Ok(OwnedValue(match self {
-            Value::U8(v) => Value::U8(*v),
-            Value::Bool(v) => Value::Bool(*v),
-            Value::I16(v) => Value::I16(*v),
-            Value::U16(v) => Value::U16(*v),
-            Value::I32(v) => Value::I32(*v),
-            Value::U32(v) => Value::U32(*v),
-            Value::I64(v) => Value::I64(*v),
-            Value::U64(v) => Value::U64(*v),
-            Value::F64(v) => Value::F64(*v),
-            Value::Str(v) => Value::Str(v.to_owned()),
-            Value::Signature(v) => Value::Signature(v.to_owned()),
-            Value::ObjectPath(v) => Value::ObjectPath(v.to_owned()),
-            Value::Value(v) => {
-                let o = OwnedValue::try_from(&**v)?;
-                Value::Value(Box::new(o.into_inner()))
+    pub fn try_to_owned(&self) -> crate::Result<OwnedVariant> {
+        Ok(OwnedVariant(match self {
+            Variant::U8(v) => Variant::U8(*v),
+            Variant::Bool(v) => Variant::Bool(*v),
+            Variant::I16(v) => Variant::I16(*v),
+            Variant::U16(v) => Variant::U16(*v),
+            Variant::I32(v) => Variant::I32(*v),
+            Variant::U32(v) => Variant::U32(*v),
+            Variant::I64(v) => Variant::I64(*v),
+            Variant::U64(v) => Variant::U64(*v),
+            Variant::F64(v) => Variant::F64(*v),
+            Variant::Str(v) => Variant::Str(v.to_owned()),
+            Variant::Signature(v) => Variant::Signature(v.to_owned()),
+            Variant::ObjectPath(v) => Variant::ObjectPath(v.to_owned()),
+            Variant::Variant(v) => {
+                let o = OwnedVariant::try_from(&**v)?;
+                Variant::Variant(Box::new(o.into_inner()))
             }
 
-            Value::Array(v) => Value::Array(v.try_to_owned()?),
-            Value::Dict(v) => Value::Dict(v.try_to_owned()?),
-            Value::Structure(v) => Value::Structure(v.try_to_owned()?),
-            Value::Maybe(v) => Value::Maybe(v.try_to_owned()?),
+            Variant::Array(v) => Variant::Array(v.try_to_owned()?),
+            Variant::Dict(v) => Variant::Dict(v.try_to_owned()?),
+            Variant::Structure(v) => Variant::Structure(v.try_to_owned()?),
+            Variant::Maybe(v) => Variant::Maybe(v.try_to_owned()?),
         }))
     }
 
     /// Creates an owned value from `self`.
     ///
     /// Results in an extra allocation if the value contains borrowed data.
-    pub fn try_into_owned(self) -> crate::Result<OwnedValue> {
-        Ok(OwnedValue(match self {
-            Value::U8(v) => Value::U8(v),
-            Value::Bool(v) => Value::Bool(v),
-            Value::I16(v) => Value::I16(v),
-            Value::U16(v) => Value::U16(v),
-            Value::I32(v) => Value::I32(v),
-            Value::U32(v) => Value::U32(v),
-            Value::I64(v) => Value::I64(v),
-            Value::U64(v) => Value::U64(v),
-            Value::F64(v) => Value::F64(v),
-            Value::Str(v) => Value::Str(v.into_owned()),
-            Value::Signature(v) => Value::Signature(v),
-            Value::ObjectPath(v) => Value::ObjectPath(v.into_owned()),
-            Value::Value(v) => Value::Value(Box::new(v.try_into_owned()?.into())),
-            Value::Array(v) => Value::Array(v.try_into_owned()?),
-            Value::Dict(v) => Value::Dict(v.try_into_owned()?),
-            Value::Structure(v) => Value::Structure(v.try_into_owned()?),
-            Value::Maybe(v) => Value::Maybe(v.try_into_owned()?),
+    pub fn try_into_owned(self) -> crate::Result<OwnedVariant> {
+        Ok(OwnedVariant(match self {
+            Variant::U8(v) => Variant::U8(v),
+            Variant::Bool(v) => Variant::Bool(v),
+            Variant::I16(v) => Variant::I16(v),
+            Variant::U16(v) => Variant::U16(v),
+            Variant::I32(v) => Variant::I32(v),
+            Variant::U32(v) => Variant::U32(v),
+            Variant::I64(v) => Variant::I64(v),
+            Variant::U64(v) => Variant::U64(v),
+            Variant::F64(v) => Variant::F64(v),
+            Variant::Str(v) => Variant::Str(v.into_owned()),
+            Variant::Signature(v) => Variant::Signature(v),
+            Variant::ObjectPath(v) => Variant::ObjectPath(v.into_owned()),
+            Variant::Variant(v) => Variant::Variant(Box::new(v.try_into_owned()?.into())),
+            Variant::Array(v) => Variant::Array(v.try_into_owned()?),
+            Variant::Dict(v) => Variant::Dict(v.try_into_owned()?),
+            Variant::Structure(v) => Variant::Structure(v.try_into_owned()?),
+            Variant::Maybe(v) => Variant::Maybe(v.try_into_owned()?),
         }))
     }
 
     /// Get the signature of the enclosed value.
     pub fn value_signature(&self) -> &Signature {
         match self {
-            Value::U8(_) => u8::SIGNATURE,
-            Value::Bool(_) => bool::SIGNATURE,
-            Value::I16(_) => i16::SIGNATURE,
-            Value::U16(_) => u16::SIGNATURE,
-            Value::I32(_) => i32::SIGNATURE,
-            Value::U32(_) => u32::SIGNATURE,
-            Value::I64(_) => i64::SIGNATURE,
-            Value::U64(_) => u64::SIGNATURE,
-            Value::F64(_) => f64::SIGNATURE,
-            Value::Str(_) => <&str>::SIGNATURE,
-            Value::Signature(_) => Signature::SIGNATURE,
-            Value::ObjectPath(_) => ObjectPath::SIGNATURE,
-            Value::Value(_) => &Signature::Variant,
+            Variant::U8(_) => u8::SIGNATURE,
+            Variant::Bool(_) => bool::SIGNATURE,
+            Variant::I16(_) => i16::SIGNATURE,
+            Variant::U16(_) => u16::SIGNATURE,
+            Variant::I32(_) => i32::SIGNATURE,
+            Variant::U32(_) => u32::SIGNATURE,
+            Variant::I64(_) => i64::SIGNATURE,
+            Variant::U64(_) => u64::SIGNATURE,
+            Variant::F64(_) => f64::SIGNATURE,
+            Variant::Str(_) => <&str>::SIGNATURE,
+            Variant::Signature(_) => Signature::SIGNATURE,
+            Variant::ObjectPath(_) => ObjectPath::SIGNATURE,
+            Variant::Variant(_) => &Signature::Variant,
 
             // Container types
-            Value::Array(value) => value.signature(),
-            Value::Dict(value) => value.signature(),
-            Value::Structure(value) => value.signature(),
-            Value::Maybe(value) => value.signature(),
+            Variant::Array(value) => value.signature(),
+            Variant::Dict(value) => value.signature(),
+            Variant::Structure(value) => value.signature(),
+            Variant::Maybe(value) => value.signature(),
         }
     }
 
     /// Try to clone the value.
     pub fn try_clone(&self) -> crate::Result<Self> {
         Ok(match self {
-            Value::U8(v) => Value::U8(*v),
-            Value::Bool(v) => Value::Bool(*v),
-            Value::I16(v) => Value::I16(*v),
-            Value::U16(v) => Value::U16(*v),
-            Value::I32(v) => Value::I32(*v),
-            Value::U32(v) => Value::U32(*v),
-            Value::I64(v) => Value::I64(*v),
-            Value::U64(v) => Value::U64(*v),
-            Value::F64(v) => Value::F64(*v),
-            Value::Str(v) => Value::Str(v.clone()),
-            Value::Signature(v) => Value::Signature(v.clone()),
-            Value::ObjectPath(v) => Value::ObjectPath(v.clone()),
-            Value::Value(v) => Value::Value(Box::new(v.try_clone()?)),
-            Value::Array(v) => Value::Array(v.try_clone()?),
-            Value::Dict(v) => Value::Dict(v.try_clone()?),
-            Value::Structure(v) => Value::Structure(v.try_clone()?),
-            Value::Maybe(v) => Value::Maybe(v.try_clone()?),
+            Variant::U8(v) => Variant::U8(*v),
+            Variant::Bool(v) => Variant::Bool(*v),
+            Variant::I16(v) => Variant::I16(*v),
+            Variant::U16(v) => Variant::U16(*v),
+            Variant::I32(v) => Variant::I32(*v),
+            Variant::U32(v) => Variant::U32(*v),
+            Variant::I64(v) => Variant::I64(*v),
+            Variant::U64(v) => Variant::U64(*v),
+            Variant::F64(v) => Variant::F64(*v),
+            Variant::Str(v) => Variant::Str(v.clone()),
+            Variant::Signature(v) => Variant::Signature(v.clone()),
+            Variant::ObjectPath(v) => Variant::ObjectPath(v.clone()),
+            Variant::Variant(v) => Variant::Variant(Box::new(v.try_clone()?)),
+            Variant::Array(v) => Variant::Array(v.try_clone()?),
+            Variant::Dict(v) => Variant::Dict(v.try_clone()?),
+            Variant::Structure(v) => Variant::Structure(v.try_clone()?),
+            Variant::Maybe(v) => Variant::Maybe(v.try_clone()?),
         })
     }
 
@@ -352,20 +375,21 @@ impl<'a> Value<'a> {
 
     /// Try to get the underlying type `T`.
     ///
-    /// Note that [`TryFrom<Value>`] is implemented for various types, and it's usually best to use
-    /// that instead. However, in generic code where you also want to unwrap [`Value::Value`],
-    /// you should use this function (because [`TryFrom<Value>`] can not be implemented for `Value`
-    /// itself as [`From<Value>`] is implicitly implemented for `Value`).
+    /// Note that [`TryFrom<Variant>`] is implemented for various types, and it's usually best to
+    /// use that instead. However, in generic code where you also want to unwrap
+    /// [`Variant::Variant`], you should use this function (because [`TryFrom<Variant>`] can not
+    /// be implemented for `Variant` itself as [`From<Variant>`] is implicitly implemented for
+    /// `Variant`).
     ///
     /// # Examples
     ///
     /// ```
-    /// use zgvariant::{Error, Result, Value};
+    /// use zgvariant::{Error, Result, Variant};
     ///
-    /// fn value_vec_to_type_vec<'a, T>(values: Vec<Value<'a>>) -> Result<Vec<T>>
+    /// fn value_vec_to_type_vec<'a, T>(values: Vec<Variant<'a>>) -> Result<Vec<T>>
     /// where
-    ///     T: TryFrom<Value<'a>>,
-    ///     <T as TryFrom<Value<'a>>>::Error: Into<Error>,
+    ///     T: TryFrom<Variant<'a>>,
+    ///     <T as TryFrom<Variant<'a>>>::Error: Into<Error>,
     /// {
     ///     let mut res = vec![];
     ///     for value in values.into_iter() {
@@ -376,27 +400,27 @@ impl<'a> Value<'a> {
     /// }
     ///
     /// // Let's try u32 values first
-    /// let v = vec![Value::U32(42), Value::U32(43)];
+    /// let v = vec![Variant::U32(42), Variant::U32(43)];
     /// let v = value_vec_to_type_vec::<u32>(v).unwrap();
     /// assert_eq!(v[0], 42);
     /// assert_eq!(v[1], 43);
     ///
-    /// // Now try Value values
-    /// let v = vec![Value::new(Value::U32(42)), Value::new(Value::U32(43))];
-    /// let v = value_vec_to_type_vec::<Value>(v).unwrap();
-    /// assert_eq!(v[0], Value::U32(42));
-    /// assert_eq!(v[1], Value::U32(43));
+    /// // Now try Variant values
+    /// let v = vec![Variant::new(Variant::U32(42)), Variant::new(Variant::U32(43))];
+    /// let v = value_vec_to_type_vec::<Variant>(v).unwrap();
+    /// assert_eq!(v[0], Variant::U32(42));
+    /// assert_eq!(v[1], Variant::U32(43));
     /// ```
     ///
-    /// [`Value::Value`]: enum.Value.html#variant.Value
-    /// [`TryFrom<Value>`]: https://doc.rust-lang.org/std/convert/trait.TryFrom.html
-    /// [`From<Value>`]: https://doc.rust-lang.org/std/convert/trait.From.html
+    /// [`Variant::Variant`]: enum.Variant.html#variant.Variant
+    /// [`TryFrom<Variant>`]: https://doc.rust-lang.org/std/convert/trait.TryFrom.html
+    /// [`From<Variant>`]: https://doc.rust-lang.org/std/convert/trait.From.html
     pub fn downcast<T>(self) -> Result<T, crate::Error>
     where
-        T: TryFrom<Value<'a>>,
-        <T as TryFrom<Value<'a>>>::Error: Into<crate::Error>,
+        T: TryFrom<Variant<'a>>,
+        <T as TryFrom<Variant<'a>>>::Error: Into<crate::Error>,
     {
-        if let Value::Value(v) = self {
+        if let Variant::Variant(v) = self {
             T::try_from(*v)
         } else {
             T::try_from(self)
@@ -407,17 +431,17 @@ impl<'a> Value<'a> {
     /// Try to get the underlying type `T`.
     ///
     /// Same as [`downcast`] except it doesn't consume `self` and hence requires
-    /// `T: TryFrom<&Value<_>>`.
+    /// `T: TryFrom<&Variant<_>>`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use zgvariant::{Error, Result, Value};
+    /// use zgvariant::{Error, Result, Variant};
     ///
-    /// fn value_vec_to_type_vec<'a, T>(values: &'a Vec<Value<'a>>) -> Result<Vec<&'a T>>
+    /// fn value_vec_to_type_vec<'a, T>(values: &'a Vec<Variant<'a>>) -> Result<Vec<&'a T>>
     /// where
-    ///     &'a T: TryFrom<&'a Value<'a>>,
-    ///     <&'a T as TryFrom<&'a Value<'a>>>::Error: Into<Error>,
+    ///     &'a T: TryFrom<&'a Variant<'a>>,
+    ///     <&'a T as TryFrom<&'a Variant<'a>>>::Error: Into<Error>,
     /// {
     ///     let mut res = vec![];
     ///     for value in values.into_iter() {
@@ -428,25 +452,25 @@ impl<'a> Value<'a> {
     /// }
     ///
     /// // Let's try u32 values first
-    /// let v = vec![Value::U32(42), Value::U32(43)];
+    /// let v = vec![Variant::U32(42), Variant::U32(43)];
     /// let v = value_vec_to_type_vec::<u32>(&v).unwrap();
     /// assert_eq!(*v[0], 42);
     /// assert_eq!(*v[1], 43);
     ///
-    /// // Now try Value values
-    /// let v = vec![Value::new(Value::U32(42)), Value::new(Value::U32(43))];
-    /// let v = value_vec_to_type_vec::<Value>(&v).unwrap();
-    /// assert_eq!(*v[0], Value::U32(42));
-    /// assert_eq!(*v[1], Value::U32(43));
+    /// // Now try Variant values
+    /// let v = vec![Variant::new(Variant::U32(42)), Variant::new(Variant::U32(43))];
+    /// let v = value_vec_to_type_vec::<Variant>(&v).unwrap();
+    /// assert_eq!(*v[0], Variant::U32(42));
+    /// assert_eq!(*v[1], Variant::U32(43));
     /// ```
     ///
-    /// [`downcast`]: enum.Value.html#method.downcast
+    /// [`downcast`]: enum.Variant.html#method.downcast
     pub fn downcast_ref<T>(&'a self) -> Result<T, crate::Error>
     where
-        T: TryFrom<&'a Value<'a>>,
-        <T as TryFrom<&'a Value<'a>>>::Error: Into<crate::Error>,
+        T: TryFrom<&'a Variant<'a>>,
+        <T as TryFrom<&'a Variant<'a>>>::Error: Into<crate::Error>,
     {
-        if let Value::Value(v) = self {
+        if let Variant::Variant(v) = self {
             <T>::try_from(v)
         } else {
             <T>::try_from(self)
@@ -455,7 +479,7 @@ impl<'a> Value<'a> {
     }
 }
 
-impl Display for Value<'_> {
+impl Display for Variant<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         value_display_fmt(self, f, true)
     }
@@ -463,55 +487,55 @@ impl Display for Value<'_> {
 
 /// Implemented based on https://gitlab.gnome.org/GNOME/glib/-/blob/e1d47f0b0d0893ac9171e24cc7bf635495376546/glib/gvariant.c#L2213
 pub(crate) fn value_display_fmt(
-    value: &Value<'_>,
+    value: &Variant<'_>,
     f: &mut std::fmt::Formatter<'_>,
     type_annotate: bool,
 ) -> std::fmt::Result {
     match value {
-        Value::U8(num) => {
+        Variant::U8(num) => {
             if type_annotate {
                 f.write_str("byte ")?;
             }
             write!(f, "0x{num:02x}")
         }
-        Value::Bool(boolean) => {
+        Variant::Bool(boolean) => {
             write!(f, "{boolean}")
         }
-        Value::I16(num) => {
+        Variant::I16(num) => {
             if type_annotate {
                 f.write_str("int16 ")?;
             }
             write!(f, "{num}")
         }
-        Value::U16(num) => {
+        Variant::U16(num) => {
             if type_annotate {
                 f.write_str("uint16 ")?;
             }
             write!(f, "{num}")
         }
-        Value::I32(num) => {
+        Variant::I32(num) => {
             // Never annotate this type because it is the default for numbers
             write!(f, "{num}")
         }
-        Value::U32(num) => {
+        Variant::U32(num) => {
             if type_annotate {
                 f.write_str("uint32 ")?;
             }
             write!(f, "{num}")
         }
-        Value::I64(num) => {
+        Variant::I64(num) => {
             if type_annotate {
                 f.write_str("int64 ")?;
             }
             write!(f, "{num}")
         }
-        Value::U64(num) => {
+        Variant::U64(num) => {
             if type_annotate {
                 f.write_str("uint64 ")?;
             }
             write!(f, "{num}")
         }
-        Value::F64(num) => {
+        Variant::F64(num) => {
             if num.fract() == 0. {
                 // Add a dot to make it clear that this is a float
                 write!(f, "{num}.")
@@ -519,22 +543,22 @@ pub(crate) fn value_display_fmt(
                 write!(f, "{num}")
             }
         }
-        Value::Str(string) => {
+        Variant::Str(string) => {
             write!(f, "{:?}", string.as_str())
         }
-        Value::Signature(val) => {
+        Variant::Signature(val) => {
             if type_annotate {
                 f.write_str("signature ")?;
             }
             write!(f, "{:?}", val.to_string())
         }
-        Value::ObjectPath(val) => {
+        Variant::ObjectPath(val) => {
             if type_annotate {
                 f.write_str("objectpath ")?;
             }
             write!(f, "{:?}", val.as_str())
         }
-        Value::Value(child) => {
+        Variant::Variant(child) => {
             f.write_char('<')?;
 
             // Always annotate types in nested variants, because they are (by nature) of
@@ -544,19 +568,19 @@ pub(crate) fn value_display_fmt(
             f.write_char('>')?;
             Ok(())
         }
-        Value::Array(array) => array_display_fmt(array, f, type_annotate),
-        Value::Dict(dict) => dict_display_fmt(dict, f, type_annotate),
-        Value::Structure(structure) => structure_display_fmt(structure, f, type_annotate),
-        Value::Maybe(maybe) => maybe_display_fmt(maybe, f, type_annotate),
+        Variant::Array(array) => array_display_fmt(array, f, type_annotate),
+        Variant::Dict(dict) => dict_display_fmt(dict, f, type_annotate),
+        Variant::Structure(structure) => structure_display_fmt(structure, f, type_annotate),
+        Variant::Maybe(maybe) => maybe_display_fmt(maybe, f, type_annotate),
     }
 }
 
-impl Serialize for Value<'_> {
+impl Serialize for Variant<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        // Serializer implementation needs to ensure padding isn't added for Value.
+        // Serializer implementation needs to ensure padding isn't added for Variant.
         let mut structure = serializer.serialize_struct("Variant", 2)?;
 
         let signature = self.value_signature();
@@ -568,7 +592,7 @@ impl Serialize for Value<'_> {
     }
 }
 
-impl<'de: 'a, 'a> Deserialize<'de> for Value<'a> {
+impl<'de: 'a, 'a> Deserialize<'de> for Variant<'a> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -582,39 +606,39 @@ impl<'de: 'a, 'a> Deserialize<'de> for Value<'a> {
 struct ValueVisitor;
 
 impl<'de> Visitor<'de> for ValueVisitor {
-    type Value = Value<'de>;
+    type Value = Variant<'de>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str("a Value")
+        formatter.write_str("a Variant")
     }
 
-    fn visit_seq<V>(self, mut visitor: V) -> Result<Value<'de>, V::Error>
+    fn visit_seq<V>(self, mut visitor: V) -> Result<Variant<'de>, V::Error>
     where
         V: SeqAccess<'de>,
     {
         let signature = visitor.next_element::<Signature>()?.ok_or_else(|| {
-            Error::invalid_value(Unexpected::Other("nothing"), &"a Value signature")
+            Error::invalid_value(Unexpected::Other("nothing"), &"a Variant signature")
         })?;
-        let seed = ValueSeed::<Value<'_>> {
+        let seed = ValueSeed::<Variant<'_>> {
             signature: &signature,
             phantom: PhantomData,
         };
 
         visitor
             .next_element_seed(seed)?
-            .ok_or_else(|| Error::invalid_value(Unexpected::Other("nothing"), &"a Value value"))
+            .ok_or_else(|| Error::invalid_value(Unexpected::Other("nothing"), &"a Variant value"))
     }
 
-    fn visit_map<V>(self, mut visitor: V) -> Result<Value<'de>, V::Error>
+    fn visit_map<V>(self, mut visitor: V) -> Result<Variant<'de>, V::Error>
     where
         V: MapAccess<'de>,
     {
         let (_, signature) = visitor.next_entry::<&str, Signature>()?.ok_or_else(|| {
-            Error::invalid_value(Unexpected::Other("nothing"), &"a Value signature")
+            Error::invalid_value(Unexpected::Other("nothing"), &"a Variant signature")
         })?;
         let _ = visitor.next_key::<&str>()?;
 
-        let seed = ValueSeed::<Value<'_>> {
+        let seed = ValueSeed::<Variant<'_>> {
             signature: &signature,
             phantom: PhantomData,
         };
@@ -642,7 +666,7 @@ impl SignatureSeed<'_> {
         };
         let mut array = Array::new_full_signature(self.signature);
 
-        while let Some(elem) = visitor.next_element_seed(ValueSeed::<Value<'_>> {
+        while let Some(elem) = visitor.next_element_seed(ValueSeed::<Variant<'_>> {
             signature: element_signature,
             phantom: PhantomData,
         })? {
@@ -669,7 +693,7 @@ impl SignatureSeed<'_> {
 
         let mut builder = StructureBuilder::new();
         for field_signature in fields_signatures {
-            if let Some(field) = visitor.next_element_seed(ValueSeed::<Value<'_>> {
+            if let Some(field) = visitor.next_element_seed(ValueSeed::<Variant<'_>> {
                 signature: field_signature,
                 phantom: PhantomData,
             })? {
@@ -698,50 +722,50 @@ where
     T: Deserialize<'de>,
 {
     #[inline]
-    fn visit_array<V>(self, visitor: V) -> Result<Value<'de>, V::Error>
+    fn visit_array<V>(self, visitor: V) -> Result<Variant<'de>, V::Error>
     where
         V: SeqAccess<'de>,
     {
         SignatureSeed::from(self)
             .visit_array(visitor)
-            .map(Value::Array)
+            .map(Variant::Array)
     }
 
     #[inline]
-    fn visit_struct<V>(self, visitor: V) -> Result<Value<'de>, V::Error>
+    fn visit_struct<V>(self, visitor: V) -> Result<Variant<'de>, V::Error>
     where
         V: SeqAccess<'de>,
     {
         SignatureSeed::from(self)
             .visit_struct(visitor)
-            .map(Value::Structure)
+            .map(Variant::Structure)
     }
 
     #[inline]
-    fn visit_variant_as_seq<V>(self, visitor: V) -> Result<Value<'de>, V::Error>
+    fn visit_variant_as_seq<V>(self, visitor: V) -> Result<Variant<'de>, V::Error>
     where
         V: SeqAccess<'de>,
     {
         ValueVisitor
             .visit_seq(visitor)
-            .map(|v| Value::Value(Box::new(v)))
+            .map(|v| Variant::Variant(Box::new(v)))
     }
 
     #[inline]
-    fn visit_variant_as_map<V>(self, visitor: V) -> Result<Value<'de>, V::Error>
+    fn visit_variant_as_map<V>(self, visitor: V) -> Result<Variant<'de>, V::Error>
     where
         V: MapAccess<'de>,
     {
         ValueVisitor
             .visit_map(visitor)
-            .map(|v| Value::Value(Box::new(v)))
+            .map(|v| Variant::Variant(Box::new(v)))
     }
 }
 
 macro_rules! value_seed_basic_method {
     ($name:ident, $type:ty) => {
         #[inline]
-        fn $name<E>(self, value: $type) -> Result<Value<'static>, E>
+        fn $name<E>(self, value: $type) -> Result<Variant<'static>, E>
         where
             E: serde::de::Error,
         {
@@ -754,10 +778,10 @@ impl<'de, T> Visitor<'de> for ValueSeed<'_, T>
 where
     T: Deserialize<'de>,
 {
-    type Value = Value<'de>;
+    type Value = Variant<'de>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str("a Value value")
+        formatter.write_str("a Variant value")
     }
 
     value_seed_basic_method!(visit_bool, bool);
@@ -770,7 +794,7 @@ where
     value_seed_basic_method!(visit_f64, f64);
 
     #[inline]
-    fn visit_i32<E>(self, value: i32) -> Result<Value<'de>, E>
+    fn visit_i32<E>(self, value: i32) -> Result<Variant<'de>, E>
     where
         E: serde::de::Error,
     {
@@ -778,7 +802,7 @@ where
     }
 
     #[inline]
-    fn visit_str<E>(self, value: &str) -> Result<Value<'de>, E>
+    fn visit_str<E>(self, value: &str) -> Result<Variant<'de>, E>
     where
         E: serde::de::Error,
     {
@@ -790,11 +814,11 @@ where
         E: Error,
     {
         match &self.signature {
-            Signature::Str => Ok(Value::Str(Str::from(v))),
+            Signature::Str => Ok(Variant::Str(Str::from(v))),
             Signature::Signature => Signature::try_from(v)
-                .map(Value::Signature)
+                .map(Variant::Signature)
                 .map_err(Error::custom),
-            Signature::ObjectPath => Ok(Value::ObjectPath(ObjectPath::from_str_unchecked(v))),
+            Signature::ObjectPath => Ok(Variant::ObjectPath(ObjectPath::from_str_unchecked(v))),
             _ => {
                 let expected = format!(
                     "`{}`, `{}` or `{}`",
@@ -810,7 +834,7 @@ where
         }
     }
 
-    fn visit_seq<V>(self, visitor: V) -> Result<Value<'de>, V::Error>
+    fn visit_seq<V>(self, visitor: V) -> Result<Variant<'de>, V::Error>
     where
         V: SeqAccess<'de>,
     {
@@ -821,12 +845,12 @@ where
             Signature::Variant => self.visit_variant_as_seq(visitor),
             s => Err(Error::invalid_value(
                 Unexpected::Str(&s.to_string()),
-                &"a Value signature",
+                &"a Variant signature",
             )),
         }
     }
 
-    fn visit_map<V>(self, mut visitor: V) -> Result<Value<'de>, V::Error>
+    fn visit_map<V>(self, mut visitor: V) -> Result<Variant<'de>, V::Error>
     where
         V: MapAccess<'de>,
     {
@@ -844,11 +868,11 @@ where
         let mut dict = Dict::new_full_signature(self.signature);
 
         while let Some((key, value)) = visitor.next_entry_seed(
-            ValueSeed::<Value<'_>> {
+            ValueSeed::<Variant<'_>> {
                 signature: &key_signature,
                 phantom: PhantomData,
             },
-            ValueSeed::<Value<'_>> {
+            ValueSeed::<Variant<'_>> {
                 signature: &value_signature,
                 phantom: PhantomData,
             },
@@ -856,7 +880,7 @@ where
             dict.append(key, value).map_err(Error::custom)?;
         }
 
-        Ok(Value::Dict(dict))
+        Ok(Variant::Dict(dict))
     }
 
     fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
@@ -879,7 +903,7 @@ where
 
         deserializer
             .deserialize_any(visitor)
-            .map(|v| Value::Maybe(Maybe::just_full_signature(v, self.signature)))
+            .map(|v| Variant::Maybe(Maybe::just_full_signature(v, self.signature)))
     }
 
     fn visit_none<E>(self) -> Result<Self::Value, E>
@@ -888,7 +912,7 @@ where
     {
         let value = Maybe::nothing_full_signature(self.signature);
 
-        Ok(Value::Maybe(value))
+        Ok(Variant::Maybe(value))
     }
 }
 
@@ -896,7 +920,7 @@ impl<'de, T> DeserializeSeed<'de> for ValueSeed<'_, T>
 where
     T: Deserialize<'de>,
 {
-    type Value = Value<'de>;
+    type Value = Variant<'de>;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
@@ -906,21 +930,21 @@ where
     }
 }
 
-impl Type for Value<'_> {
+impl Type for Variant<'_> {
     const SIGNATURE: &'static Signature = &Signature::Variant;
 }
 
-impl<'a> TryFrom<&Value<'a>> for Value<'a> {
+impl<'a> TryFrom<&Variant<'a>> for Variant<'a> {
     type Error = crate::Error;
 
-    fn try_from(value: &Value<'a>) -> crate::Result<Value<'a>> {
+    fn try_from(value: &Variant<'a>) -> crate::Result<Variant<'a>> {
         value.try_clone()
     }
 }
 
-impl Clone for Value<'_> {
+impl Clone for Variant<'_> {
     fn clone(&self) -> Self {
-        self.try_clone().expect("cloning a `Value` can't fail")
+        self.try_clone().expect("cloning a `Variant` can't fail")
     }
 }
 
@@ -933,7 +957,7 @@ mod tests {
     #[test]
     fn value_display() {
         assert_eq!(
-            Value::new((
+            Variant::new((
                 255_u8,
                 true,
                 -1_i16,
@@ -951,14 +975,14 @@ mod tests {
         );
 
         assert_eq!(
-            Value::new(vec![
+            Variant::new(vec![
                 "", " ", "a", r#"""#, "'", "a'b", "a'\"b", "\\", "\n'\"",
             ])
             .to_string(),
             r#"["", " ", "a", "\"", "'", "a'b", "a'\"b", "\\", "\n'\""]"#
         );
         assert_eq!(
-            Value::new(vec![
+            Variant::new(vec![
                 "\x07\x08\x09\x0A\x0B\x0C\x0D",
                 "\x7F",
                 char::from_u32(0xD8000).unwrap().to_string().as_str()
@@ -968,7 +992,7 @@ mod tests {
         );
 
         assert_eq!(
-            Value::new((
+            Variant::new((
                 vec![crate::signature!(""), crate::signature!("(ysa{sd})"),],
                 vec![
                     ObjectPath::from_static_str("/").unwrap(),
@@ -976,8 +1000,8 @@ mod tests {
                         .unwrap(),
                 ],
                 vec![
-                    Value::new(0_u8),
-                    Value::new((Value::new(51), Value::new(Value::new(1_u32)))),
+                    Variant::new(0_u8),
+                    Variant::new((Variant::new(51), Variant::new(Variant::new(1_u32)))),
                 ]
             ))
             .to_string(),
@@ -986,9 +1010,9 @@ mod tests {
                 [<byte 0x00>, <(<51>, <<uint32 1>>)>])"
         );
 
-        assert_eq!(Value::new(vec![] as Vec<Vec<i64>>).to_string(), "@aax []");
+        assert_eq!(Variant::new(vec![] as Vec<Vec<i64>>).to_string(), "@aax []");
         assert_eq!(
-            Value::new(vec![
+            Variant::new(vec![
                 vec![0_i16, 1_i16],
                 vec![2_i16, 3_i16],
                 vec![4_i16, 5_i16]
@@ -997,7 +1021,7 @@ mod tests {
             "[[int16 0, 1], [2, 3], [4, 5]]"
         );
         assert_eq!(
-            Value::new(vec![
+            Variant::new(vec![
                 b"Hello".to_vec(),
                 b"Hell\0o".to_vec(),
                 b"H\0ello\0".to_vec(),
@@ -1016,15 +1040,15 @@ mod tests {
         );
 
         assert_eq!(
-            Value::new(HashMap::<bool, bool>::new()).to_string(),
+            Variant::new(HashMap::<bool, bool>::new()).to_string(),
             "@a{bb} {}"
         );
         assert_eq!(
-            Value::new(vec![(true, 0_i64)].into_iter().collect::<HashMap<_, _>>()).to_string(),
+            Variant::new(vec![(true, 0_i64)].into_iter().collect::<HashMap<_, _>>()).to_string(),
             "{true: int64 0}",
         );
         // The order of the entries may vary
-        let val = Value::new(
+        let val = Variant::new(
             vec![(32_u16, 64_i64), (100_u16, 200_i64)]
                 .into_iter()
                 .collect::<HashMap<_, _>>(),
@@ -1049,7 +1073,7 @@ mod tests {
         );
 
         assert_eq!(
-            Value::new(((true,), (true, false), (true, true, false))).to_string(),
+            Variant::new(((true,), (true, false), (true, true, false))).to_string(),
             "((true,), (true, false), (true, true, false))"
         );
 
@@ -1057,7 +1081,7 @@ mod tests {
             (@mn nothing, @mmn just nothing, @mmmn just just nothing), \
             (@mmn nothing, @mmmn just nothing))";
         assert_eq!(
-            Value::new((
+            Variant::new((
                 (Some(0_i16), Some(Some(0_i16)), Some(Some(Some(0_i16))),),
                 (None::<i16>, Some(None::<i16>), Some(Some(None::<i16>)),),
                 (None::<Option<i16>>, Some(None::<Option<i16>>)),
@@ -1072,23 +1096,23 @@ mod tests {
             @mmn 200, <(byte 0x03, \"Hello!\")>)>}>], \
             7777, objectpath \"/\", 8888)";
         assert_eq!(
-            Value::new((
+            Variant::new((
                 None::<bool>,
                 None::<bool>,
                 Some(
-                    vec![("size", Value::new((800, 600)))]
+                    vec![("size", Variant::new((800, 600)))]
                         .into_iter()
                         .collect::<HashMap<_, _>>()
                 ),
                 vec![
-                    Value::new(1),
-                    Value::new(
+                    Variant::new(1),
+                    Variant::new(
                         vec![(
                             "dimension",
-                            Value::new((
+                            Variant::new((
                                 vec![2.4, 1.],
                                 Some(Some(200_i16)),
-                                Value::new((3_u8, "Hello!"))
+                                Variant::new((3_u8, "Hello!"))
                             ))
                         )]
                         .into_iter()

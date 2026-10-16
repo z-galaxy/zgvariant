@@ -1,27 +1,27 @@
 use serde::ser::{Serialize, Serializer};
 use std::fmt::Display;
 
-use crate::{Error, Signature, Type, Value, value_display_fmt};
+use crate::{Error, Signature, Type, Variant, value_display_fmt};
 
-/// A helper type to wrap `Option<T>` (GVariant's Maybe type) in [`Value`].
+/// A helper type to wrap `Option<T>` (GVariant's Maybe type) in [`Variant`].
 ///
 /// API is provided to convert from, and to `Option<T>`.
 ///
-/// [`Value`]: enum.Value.html
+/// [`Variant`]: enum.Variant.html
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Maybe<'a> {
-    value: Box<Option<Value<'a>>>,
+    value: Box<Option<Variant<'a>>>,
     signature: Signature,
 }
 
 impl<'a> Maybe<'a> {
     /// Get a reference to underlying value.
-    pub fn inner(&self) -> &Option<Value<'a>> {
+    pub fn inner(&self) -> &Option<Variant<'a>> {
         &self.value
     }
 
     /// Create a new Just (Some) `Maybe`.
-    pub fn just(value: Value<'a>) -> Self {
+    pub fn just(value: Variant<'a>) -> Self {
         let value_signature = value.value_signature().clone();
         let signature = Signature::maybe(value_signature);
         Self {
@@ -30,7 +30,7 @@ impl<'a> Maybe<'a> {
         }
     }
 
-    pub(crate) fn just_full_signature(value: Value<'a>, signature: &Signature) -> Self {
+    pub(crate) fn just_full_signature(value: Variant<'a>, signature: &Signature) -> Self {
         Self {
             signature: signature.clone(),
             value: Box::new(Some(value)),
@@ -56,8 +56,8 @@ impl<'a> Maybe<'a> {
     /// Get the inner value as a concrete type
     pub fn get<T>(&'a self) -> core::result::Result<Option<T>, Error>
     where
-        T: TryFrom<&'a Value<'a>>,
-        <T as TryFrom<&'a Value<'a>>>::Error: Into<crate::Error>,
+        T: TryFrom<&'a Variant<'a>>,
+        <T as TryFrom<&'a Variant<'a>>>::Error: Into<crate::Error>,
     {
         self.value
             .as_ref()
@@ -137,7 +137,7 @@ pub(crate) fn maybe_display_fmt(
         let mut curr = maybe.inner();
         let mut depth = 0;
 
-        while let Some(Value::Maybe(child_maybe)) = curr {
+        while let Some(Variant::Maybe(child_maybe)) = curr {
             curr = child_maybe.inner();
             depth += 1;
         }
@@ -161,23 +161,23 @@ pub(crate) fn maybe_display_fmt(
 
 impl<'a, T> From<Option<T>> for Maybe<'a>
 where
-    T: Type + Into<Value<'a>>,
+    T: Type + Into<Variant<'a>>,
 {
     fn from(value: Option<T>) -> Self {
         value
-            .map(|v| Self::just(Value::new(v)))
+            .map(|v| Self::just(Variant::new(v)))
             .unwrap_or_else(|| Self::nothing(T::SIGNATURE))
     }
 }
 
 impl<'a, T> From<&Option<T>> for Maybe<'a>
 where
-    T: Type + Into<Value<'a>> + Clone,
+    T: Type + Into<Variant<'a>> + Clone,
 {
     fn from(value: &Option<T>) -> Self {
         value
             .as_ref()
-            .map(|v| Self::just(Value::new(v.clone())))
+            .map(|v| Self::just(Variant::new(v.clone())))
             .unwrap_or_else(|| Self::nothing(T::SIGNATURE))
     }
 }

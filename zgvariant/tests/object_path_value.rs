@@ -1,4 +1,4 @@
-use zgvariant::{LE, ObjectPath, Value};
+use zgvariant::{LE, ObjectPath, Variant};
 
 #[macro_use]
 mod common {
@@ -10,13 +10,13 @@ fn object_path_value() {
     let o = ObjectPath::try_from("/hello/world").unwrap();
     basic_type_test!(LE, o, 13, ObjectPath<'_>, 1);
 
-    // As Value
-    let v: Value<'_> = o.into();
+    // As Variant
+    let v: Variant<'_> = o.into();
     assert_eq!(v.value_signature(), "o");
     let encoded = value_test!(LE, v, 15);
-    let v = encoded.deserialize::<Value<'_>>().unwrap().0;
+    let v = encoded.deserialize::<Variant<'_>>().unwrap().0;
     assert_eq!(
         v,
-        Value::ObjectPath(ObjectPath::try_from("/hello/world").unwrap())
+        Variant::ObjectPath(ObjectPath::try_from("/hello/world").unwrap())
     );
 }

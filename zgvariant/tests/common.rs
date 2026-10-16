@@ -30,13 +30,13 @@ macro_rules! basic_type_test {
     ($endian:expr, $test_value:expr, $expected_len:expr, $expected_ty:ty, $align:literal, $kind:ident, $expected_value_len:expr) => {{
         let encoded = basic_type_test!($endian, $test_value, $expected_len, $expected_ty, $align);
 
-        // As Value
-        let v: zgvariant::Value<'_> = $test_value.into();
+        // As Variant
+        let v: zgvariant::Variant<'_> = $test_value.into();
         assert_eq!(
             v.value_signature(),
             <$expected_ty as zgvariant::Basic>::SIGNATURE_STR
         );
-        assert_eq!(v, zgvariant::Value::$kind($test_value));
+        assert_eq!(v, zgvariant::Variant::$kind($test_value));
         value_test!($endian, v, $expected_value_len);
 
         let v: $expected_ty = v.try_into().unwrap();
@@ -56,7 +56,7 @@ macro_rules! value_test {
             $expected_len,
             "invalid encoding using `to_bytes`"
         );
-        let (decoded, parsed): (zgvariant::Value<'_>, _) = encoded.deserialize().unwrap();
+        let (decoded, parsed): (zgvariant::Variant<'_>, _) = encoded.deserialize().unwrap();
         assert!(decoded == $test_value, "invalid decoding");
         assert!(parsed == encoded.len(), "invalid parsing");
 

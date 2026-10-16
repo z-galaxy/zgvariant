@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use zgvariant::{Error, LE, OwnedValue, Type, Value, serialized::Context, to_bytes};
+use zgvariant::{Error, LE, OwnedVariant, Type, Variant, serialized::Context, to_bytes};
 
 #[test]
 fn derive() {
@@ -32,7 +32,7 @@ fn derive() {
     let _: UnitStruct = encoded.deserialize().unwrap().0;
 
     #[repr(u8)]
-    #[derive(Deserialize_repr, Serialize_repr, Type, Value, OwnedValue, Debug, PartialEq)]
+    #[derive(Deserialize_repr, Serialize_repr, Type, Variant, OwnedVariant, Debug, PartialEq)]
     enum Enum {
         Variant1,
         Variant2,
@@ -45,12 +45,12 @@ fn derive() {
     let decoded: Enum = encoded.deserialize().unwrap().0;
     assert_eq!(decoded, Enum::Variant3);
 
-    assert_eq!(Value::from(Enum::Variant1), Value::U8(0));
-    assert_eq!(Enum::try_from(Value::U8(2)), Ok(Enum::Variant3));
-    assert_eq!(Enum::try_from(Value::U8(4)), Err(Error::IncorrectType));
+    assert_eq!(Variant::from(Enum::Variant1), Variant::U8(0));
+    assert_eq!(Enum::try_from(Variant::U8(2)), Ok(Enum::Variant3));
+    assert_eq!(Enum::try_from(Variant::U8(4)), Err(Error::IncorrectType));
 
     #[repr(i64)]
-    #[derive(Deserialize_repr, Serialize_repr, Type, Value, OwnedValue, Debug, PartialEq)]
+    #[derive(Deserialize_repr, Serialize_repr, Type, Variant, OwnedVariant, Debug, PartialEq)]
     enum Enum2 {
         Variant1,
         Variant2,
@@ -63,11 +63,11 @@ fn derive() {
     let decoded: Enum2 = encoded.deserialize().unwrap().0;
     assert_eq!(decoded, Enum2::Variant2);
 
-    assert_eq!(Value::from(Enum2::Variant1), Value::I64(0));
-    assert_eq!(Enum2::try_from(Value::I64(2)), Ok(Enum2::Variant3));
-    assert_eq!(Enum2::try_from(Value::I64(4)), Err(Error::IncorrectType));
+    assert_eq!(Variant::from(Enum2::Variant1), Variant::I64(0));
+    assert_eq!(Enum2::try_from(Variant::I64(2)), Ok(Enum2::Variant3));
+    assert_eq!(Enum2::try_from(Variant::I64(4)), Err(Error::IncorrectType));
 
-    #[derive(Deserialize, Serialize, Type, Value, OwnedValue, Debug, PartialEq)]
+    #[derive(Deserialize, Serialize, Type, Variant, OwnedVariant, Debug, PartialEq)]
     enum NoReprEnum {
         Variant1,
         Variant2,
@@ -84,7 +84,7 @@ fn derive() {
     let decoded: NoReprEnum = encoded.deserialize().unwrap().0;
     assert_eq!(decoded, NoReprEnum::Variant2);
 
-    #[derive(Deserialize, Serialize, Type, Value, OwnedValue, Debug, PartialEq)]
+    #[derive(Deserialize, Serialize, Type, Variant, OwnedVariant, Debug, PartialEq)]
     #[zvariant(signature = "s", rename_all = "snake_case")]
     enum StrEnum {
         VariantOne,
@@ -99,18 +99,21 @@ fn derive() {
     assert_eq!(decoded, StrEnum::Variant2);
 
     assert_eq!(
-        StrEnum::try_from(Value::Str("variant_one".into())),
+        StrEnum::try_from(Variant::Str("variant_one".into())),
         Ok(StrEnum::VariantOne)
     );
     assert_eq!(
-        StrEnum::try_from(Value::Str("variant2".into())),
+        StrEnum::try_from(Variant::Str("variant2".into())),
         Ok(StrEnum::Variant2)
     );
     assert_eq!(
-        StrEnum::try_from(Value::Str("variant4".into())),
+        StrEnum::try_from(Variant::Str("variant4".into())),
         Err(Error::IncorrectType)
     );
-    assert_eq!(StrEnum::try_from(Value::U32(0)), Err(Error::IncorrectType));
+    assert_eq!(
+        StrEnum::try_from(Variant::U32(0)),
+        Err(Error::IncorrectType)
+    );
 
     #[derive(Deserialize, Serialize, Type)]
     enum NewType {

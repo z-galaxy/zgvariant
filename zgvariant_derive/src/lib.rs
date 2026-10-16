@@ -4,7 +4,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::DeriveInput;
-use zvariant_utils::derive::{self, Config};
+use zbus_utils::derive::{self, Config};
 
 fn config() -> Config {
     Config {
@@ -103,18 +103,18 @@ fn config() -> Config {
 /// `a{sv}`), for which `dict` is provided as a convenient alias:
 ///
 /// ```
-/// use zgvariant::{serialized::Context, as_value, to_bytes, Type, LE};
+/// use zgvariant::{serialized::Context, as_variant, to_bytes, Type, LE};
 /// use serde::{Deserialize, Serialize};
 ///
 /// #[derive(Deserialize, Serialize, Type, PartialEq, Debug)]
 /// // `#[zgvariant(signature = "a{sv}")]` would be the same.
 /// #[zgvariant(signature = "dict")]
 /// struct Struct {
-///     #[serde(with = "as_value")]
+///     #[serde(with = "as_variant")]
 ///     field1: u16,
-///     #[serde(with = "as_value")]
+///     #[serde(with = "as_variant")]
 ///     field2: i64,
-///     #[serde(with = "as_value")]
+///     #[serde(with = "as_variant")]
 ///     field3: String,
 /// }
 ///
@@ -197,7 +197,7 @@ pub fn type_macro_derive(input: TokenStream) -> TokenStream {
 /// There are two approaches to serializing structs as dictionaries:
 ///
 /// 1. Using this macro (simpler, but less control).
-/// 2. Using the `Serialize` derive with `zgvariant::as_value` (more verbose, but more control).
+/// 2. Using the `Serialize` derive with `zgvariant::as_variant` (more verbose, but more control).
 ///
 /// See the example below and the relevant [FAQ entry] for more details on the alternative
 /// approach.
@@ -221,15 +221,15 @@ pub fn type_macro_derive(input: TokenStream) -> TokenStream {
 ///
 /// ```
 /// use serde::Serialize;
-/// use zgvariant::{Type, as_value};
+/// use zgvariant::{Type, as_variant};
 ///
 /// #[derive(Debug, Default, Serialize, Type)]
 /// #[zgvariant(signature = "a{sv}")]
 /// #[serde(default, rename_all = "PascalCase")]
 /// pub struct MyStruct {
-///     #[serde(with = "as_value::optional", skip_serializing_if = "Option::is_none")]
+///     #[serde(with = "as_variant::optional", skip_serializing_if = "Option::is_none")]
 ///     field1: Option<u32>,
-///     #[serde(with = "as_value")]
+///     #[serde(with = "as_variant")]
 ///     field2: String,
 /// }
 /// ```
@@ -300,7 +300,7 @@ pub fn serialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 /// There are two approaches to deserializing dictionaries as structs:
 ///
 /// 1. Using this macro (simpler, but less control).
-/// 2. Using the `Deserialize` derive with `zgvariant::as_value` (more verbose, but more control).
+/// 2. Using the `Deserialize` derive with `zgvariant::as_variant` (more verbose, but more control).
 ///
 /// See the example below and the relevant [FAQ entry] for more details on the alternative
 /// approach.
@@ -324,15 +324,15 @@ pub fn serialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 ///
 /// ```
 /// use serde::Deserialize;
-/// use zgvariant::{Type, as_value};
+/// use zgvariant::{Type, as_variant};
 ///
 /// #[derive(Debug, Default, Deserialize, Type)]
 /// #[zgvariant(signature = "a{sv}")]
 /// #[serde(default, rename_all = "PascalCase")]
 /// pub struct MyStruct {
-///     #[serde(with = "as_value::optional")]
+///     #[serde(with = "as_variant::optional")]
 ///     field1: Option<u32>,
-///     #[serde(with = "as_value")]
+///     #[serde(with = "as_variant")]
 ///     field2: String,
 /// }
 /// ```
@@ -354,9 +354,9 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
         .into()
 }
 
-/// Implements conversions for your type to/from [`Value`].
+/// Implements conversions for your type to/from [`Variant`].
 ///
-/// Implements `From<Self>` for `Value` and `TryFrom<Value>` back to `Self`, for both structs
+/// Implements `From<Self>` for `Variant` and `TryFrom<Variant>` back to `Self`, for both structs
 /// (any number of fields, including generic ones) and enums (unit variants only, encoded by
 /// default as `u32`, or as a string when combined with `#[zgvariant(signature = "s")]`).
 ///
@@ -365,9 +365,9 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 /// Simple owned structures:
 ///
 /// ```
-/// use zgvariant::{OwnedObjectPath, OwnedValue, Value};
+/// use zgvariant::{OwnedObjectPath, OwnedVariant, Variant};
 ///
-/// #[derive(Clone, Value, OwnedValue)]
+/// #[derive(Clone, Variant, OwnedVariant)]
 /// struct OwnedStruct {
 ///     owned_str: String,
 ///     owned_path: OwnedObjectPath,
@@ -377,9 +377,9 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 ///     owned_str: String::from("hi"),
 ///     owned_path: OwnedObjectPath::try_from("/blah").unwrap(),
 /// };
-/// let value = Value::from(s.clone());
+/// let value = Variant::from(s.clone());
 /// let _ = OwnedStruct::try_from(value).unwrap();
-/// let value = OwnedValue::try_from(s).unwrap();
+/// let value = OwnedVariant::try_from(s).unwrap();
 /// let s = OwnedStruct::try_from(value).unwrap();
 /// assert_eq!(s.owned_str, "hi");
 /// assert_eq!(s.owned_path.as_str(), "/blah");
@@ -389,9 +389,9 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 ///
 /// ```
 /// use zgvariant::{ObjectPath, Str};
-/// # use zgvariant::{OwnedValue, Value};
+/// # use zgvariant::{OwnedVariant, Variant};
 /// #
-/// #[derive(Clone, Value, OwnedValue)]
+/// #[derive(Clone, Variant, OwnedVariant)]
 /// struct UnownedStruct<'a> {
 ///     s: Str<'a>,
 ///     path: ObjectPath<'a>,
@@ -402,10 +402,10 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 ///     s: Str::from(&hi),
 ///     path: ObjectPath::try_from("/blah").unwrap(),
 /// };
-/// let value = Value::from(s.clone());
+/// let value = Variant::from(s.clone());
 /// let s = UnownedStruct::try_from(value).unwrap();
 ///
-/// let value = OwnedValue::try_from(s).unwrap();
+/// let value = OwnedVariant::try_from(s).unwrap();
 /// let s = UnownedStruct::try_from(value).unwrap();
 /// assert_eq!(s.s, "hi");
 /// assert_eq!(s.path, "/blah");
@@ -414,9 +414,9 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 /// Generic structures also supported:
 ///
 /// ```
-/// # use zgvariant::{OwnedObjectPath, OwnedValue, Value};
+/// # use zgvariant::{OwnedObjectPath, OwnedVariant, Variant};
 /// #
-/// #[derive(Clone, Value, OwnedValue)]
+/// #[derive(Clone, Variant, OwnedVariant)]
 /// struct GenericStruct<S, O> {
 ///     field1: S,
 ///     field2: O,
@@ -426,9 +426,9 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 ///     field1: String::from("hi"),
 ///     field2: OwnedObjectPath::try_from("/blah").unwrap(),
 /// };
-/// let value = Value::from(s.clone());
+/// let value = Variant::from(s.clone());
 /// let _ = GenericStruct::<String, OwnedObjectPath>::try_from(value).unwrap();
-/// let value = OwnedValue::try_from(s).unwrap();
+/// let value = OwnedVariant::try_from(s).unwrap();
 /// let s = GenericStruct::<String, OwnedObjectPath>::try_from(value).unwrap();
 /// assert_eq!(s.field1, "hi");
 /// assert_eq!(s.field2.as_str(), "/blah");
@@ -437,9 +437,9 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 /// Enums also supported but currently only with unit variants:
 ///
 /// ```
-/// # use zgvariant::{OwnedValue, Value};
+/// # use zgvariant::{OwnedVariant, Variant};
 /// #
-/// #[derive(Debug, PartialEq, Value, OwnedValue)]
+/// #[derive(Debug, PartialEq, Variant, OwnedVariant)]
 /// // Default representation is `u32`.
 /// #[repr(u8)]
 /// enum Enum {
@@ -447,11 +447,11 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 ///     Variant2,
 /// }
 ///
-/// let value = Value::from(Enum::Variant1);
+/// let value = Variant::from(Enum::Variant1);
 /// let e = Enum::try_from(value).unwrap();
 /// assert_eq!(e, Enum::Variant1);
 /// assert_eq!(e as u8, 0);
-/// let value = OwnedValue::try_from(Enum::Variant2).unwrap();
+/// let value = OwnedVariant::try_from(Enum::Variant2).unwrap();
 /// let e = Enum::try_from(value).unwrap();
 /// assert_eq!(e, Enum::Variant2);
 /// ```
@@ -459,19 +459,19 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 /// String-encoded enums are also supported:
 ///
 /// ```
-/// # use zgvariant::{OwnedValue, Value};
+/// # use zgvariant::{OwnedVariant, Variant};
 /// #
-/// #[derive(Debug, PartialEq, Value, OwnedValue)]
+/// #[derive(Debug, PartialEq, Variant, OwnedVariant)]
 /// #[zgvariant(signature = "s")]
 /// enum StrEnum {
 ///     Variant1,
 ///     Variant2,
 /// }
 ///
-/// let value = Value::from(StrEnum::Variant1);
+/// let value = Variant::from(StrEnum::Variant1);
 /// let e = StrEnum::try_from(value).unwrap();
 /// assert_eq!(e, StrEnum::Variant1);
-/// let value = OwnedValue::try_from(StrEnum::Variant2).unwrap();
+/// let value = OwnedVariant::try_from(StrEnum::Variant2).unwrap();
 /// let e = StrEnum::try_from(value).unwrap();
 /// assert_eq!(e, StrEnum::Variant2);
 /// ```
@@ -502,10 +502,10 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 /// Here is an example using both `rename` and `rename_all`:
 ///
 /// ```
-/// # use zgvariant::{OwnedValue, Value, Dict};
+/// # use zgvariant::{OwnedVariant, Variant, Dict};
 /// # use std::collections::HashMap;
 /// #
-/// #[derive(Clone, Value, OwnedValue)]
+/// #[derive(Clone, Variant, OwnedVariant)]
 /// #[zgvariant(signature = "dict", rename_all = "PascalCase")]
 /// struct RenamedStruct {
 ///     #[zgvariant(rename = "MyValue")]
@@ -517,7 +517,7 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 ///     field1: String::from("hello"),
 ///     field2: String::from("world")
 /// };
-/// let v = Value::from(s);
+/// let v = Variant::from(s);
 /// let d = Dict::try_from(v).unwrap();
 /// let hm: HashMap<String, String> = HashMap::try_from(d).unwrap();
 /// assert_eq!(hm.get("MyValue").unwrap().as_str(), "hello");
@@ -535,9 +535,9 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 /// can specify the crate path with `#[zgvariant(crate = "...")]`:
 ///
 /// ```
-/// use zgvariant::Value;
+/// use zgvariant::Variant;
 ///
-/// #[derive(Clone, Value)]
+/// #[derive(Clone, Variant)]
 /// #[zgvariant(crate = "zgvariant")]
 /// struct MyStruct {
 ///     field: String,
@@ -547,32 +547,33 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 /// # Migrating from `zvariant`
 ///
 /// The `#[zvariant(...)]` helper attribute is also accepted, as an alias for
-/// `#[zgvariant(...)]`, so types deriving `zvariant::Value` today keep compiling unchanged once
-/// switched over to deriving `zgvariant::Value`.
+/// `#[zgvariant(...)]`, so types deriving `zvariant::Value` today only need the derive renamed to
+/// `zgvariant::Variant` once switched over. The `zgvariant` crate also re-exports it as `Value`,
+/// for code written against zgvariant 1.x.
 ///
-/// [`Value`]: https://docs.rs/zgvariant/latest/zgvariant/enum.Value.html
+/// [`Variant`]: https://docs.rs/zgvariant/latest/zgvariant/enum.Variant.html
 /// [`Type`]: crate::Type#custom-signatures
-#[proc_macro_derive(Value, attributes(zgvariant, zvariant))]
-pub fn value_macro_derive(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(Variant, attributes(zgvariant, zvariant))]
+pub fn variant_macro_derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
-    derive::expand_value_derive(ast, derive::ValueType::Value, &config())
+    derive::expand_variant_derive(ast, derive::VariantType::Variant, &config())
         .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }
 
-/// Implements conversions for your type to/from [`OwnedValue`].
+/// Implements conversions for your type to/from [`OwnedVariant`].
 ///
-/// Implements `TryFrom<Self>` for `OwnedValue` and `TryFrom<OwnedValue>` back to `Self`.
+/// Implements `TryFrom<Self>` for `OwnedVariant` and `TryFrom<OwnedVariant>` back to `Self`.
 ///
-/// See [`Value`] documentation for the supported attributes and their semantics; the same
+/// See [`Variant`] documentation for the supported attributes and their semantics; the same
 /// `#[zgvariant(...)]`/`#[zvariant(...)]` attributes apply here.
 ///
-/// [`OwnedValue`]: https://docs.rs/zgvariant/latest/zgvariant/struct.OwnedValue.html
-/// [`Value`]: crate::Value
-#[proc_macro_derive(OwnedValue, attributes(zgvariant, zvariant))]
-pub fn owned_value_macro_derive(input: TokenStream) -> TokenStream {
+/// [`OwnedVariant`]: https://docs.rs/zgvariant/latest/zgvariant/struct.OwnedVariant.html
+/// [`Variant`]: crate::Variant
+#[proc_macro_derive(OwnedVariant, attributes(zgvariant, zvariant))]
+pub fn owned_variant_macro_derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
-    derive::expand_value_derive(ast, derive::ValueType::OwnedValue, &config())
+    derive::expand_variant_derive(ast, derive::VariantType::OwnedVariant, &config())
         .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }
@@ -665,7 +666,7 @@ pub fn signature(input: TokenStream) -> TokenStream {
 #[cfg(test)]
 mod tests {
     use syn::parse_quote;
-    use zvariant_utils::derive;
+    use zbus_utils::derive;
 
     #[test]
     fn type_derive_emits_zgvariant_paths() {

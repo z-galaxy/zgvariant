@@ -7,7 +7,7 @@ This file provides guidance to AI coding agents when working with code in this r
 zgvariant is a serde-based implementation of the [GVariant] binary serialization format,
 extracted from the `zvariant` crate ([zbus] project). It's a two-crate workspace: `zgvariant`
 (the format implementation) and `zgvariant_derive` (thin proc-macro shells over the codegen
-shared with zvariant via `zvariant_utils`).
+shared with zbus via `zbus_utils`).
 
 Besides the library and its test suite (`zgvariant/tests/`), the repository also has:
 
@@ -22,7 +22,7 @@ Besides the library and its test suite (`zgvariant/tests/`), the repository also
 - **Commit style**: gimoji emoji-prefixed commit messages, enforced by commitlint via
   `@gimoji/commitlint-config-gimoji`. No package prefix after the emoji (unlike zbus).
 - **Formatting**: `cargo +nightly fmt` (the repo's `.rustfmt.toml` uses nightly-only options).
-- **MSRV**: 1.87.
+- **MSRV**: 1.89.
 - **Line length**: 100 chars, in code and docs alike.
 - **Changelog**: `CHANGELOG.md` is managed by [release-plz] — do not hand-edit it. Write a good
   commit message and release-plz will generate the entry at release time.
