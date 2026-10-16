@@ -22,7 +22,7 @@ camino = ["dep:camino"]
 
 [dependencies]
 zgvariant_derive.workspace = true
-zvariant_utils.workspace = true
+zbus_utils.workspace = true
 zcheapstr.workspace = true
 endi.workspace = true
 serde.workspace = true

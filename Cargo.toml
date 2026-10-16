@@ -9,7 +9,7 @@ license = "MIT"
 repository = "https://github.com/z-galaxy/zgvariant/"
 
 [workspace.dependencies]
-zvariant_utils = { version = "4.1.0", features = ["gvariant"] }
+zbus_utils = { version = "6.0.0", features = ["gvariant"] }
 zgvariant_derive = { path = "zgvariant_derive", version = "1.2.0" }
 serde = { version = "1.0.200", features = ["derive"] }
 endi = "1.1.0"

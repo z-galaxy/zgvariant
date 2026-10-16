@@ -75,6 +75,15 @@ mod container_depths;
 
 pub mod as_value;
 
+// The derive codegen shared with zbus 6 (`zbus_utils`) names the value types and the
+// `as_value` module after zbus's `Variant`, `OwnedVariant` and `as_variant`.
+#[doc(hidden)]
+pub type Variant<'a> = Value<'a>;
+#[doc(hidden)]
+pub type OwnedVariant = OwnedValue;
+#[doc(hidden)]
+pub use as_value as as_variant;
+
 pub use zgvariant_derive::{DeserializeDict, OwnedValue, SerializeDict, Type, Value, signature};
 
 // Required for the macros to function within this crate.

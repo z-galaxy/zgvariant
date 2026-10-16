@@ -135,10 +135,11 @@ The `enumflags2` feature remains for compatibility with existing code that uses
 | `#[zvariant(...)]` derive attrs     | still accepted; `#[zgvariant(...)]` preferred|
 | `SerializeValue`/`DeserializeValue` | gone — `as_value::{Serialize, Deserialize}`  |
 
-`Signature` is the same type in both crates (re-exported from `zvariant_utils`), so signatures
-can be passed between zvariant- and zgvariant-using code freely.
+`Signature` is the same type as zbus 6's (both re-export it from `zbus_utils`), so signatures
+can be passed between zbus- and zgvariant-using code freely. zgvariant 1.x shares it with
+zvariant 5 instead.
 
-Note: a type cannot derive both zvariant's and zgvariant's `Type` in the same scope without
+Note: a type cannot derive both zbus's and zgvariant's `Type` in the same scope without
 renaming one import, since the derive macros share their names.
 
 ## License

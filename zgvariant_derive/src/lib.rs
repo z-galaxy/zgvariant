@@ -4,7 +4,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::DeriveInput;
-use zvariant_utils::derive::{self, Config};
+use zbus_utils::derive::{self, Config};
 
 fn config() -> Config {
     Config {
@@ -555,7 +555,7 @@ pub fn deserialize_dict_macro_derive(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Value, attributes(zgvariant, zvariant))]
 pub fn value_macro_derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
-    derive::expand_value_derive(ast, derive::ValueType::Value, &config())
+    derive::expand_variant_derive(ast, derive::VariantType::Variant, &config())
         .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }
@@ -572,7 +572,7 @@ pub fn value_macro_derive(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(OwnedValue, attributes(zgvariant, zvariant))]
 pub fn owned_value_macro_derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
-    derive::expand_value_derive(ast, derive::ValueType::OwnedValue, &config())
+    derive::expand_variant_derive(ast, derive::VariantType::OwnedVariant, &config())
         .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }
@@ -665,7 +665,7 @@ pub fn signature(input: TokenStream) -> TokenStream {
 #[cfg(test)]
 mod tests {
     use syn::parse_quote;
-    use zvariant_utils::derive;
+    use zbus_utils::derive;
 
     #[test]
     fn type_derive_emits_zgvariant_paths() {
