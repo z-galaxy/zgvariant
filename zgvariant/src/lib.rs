@@ -48,8 +48,8 @@ pub use crate::structure::*;
 mod maybe;
 pub use crate::maybe::*;
 
-mod value;
-pub use value::*;
+mod variant;
+pub use variant::*;
 
 mod error;
 pub use error::*;
@@ -61,30 +61,33 @@ pub use r#type::*;
 mod tuple;
 pub use tuple::*;
 
-mod from_value;
+mod from_variant;
 
-mod into_value;
+mod into_variant;
 
-mod owned_value;
-pub use owned_value::*;
+mod owned_variant;
+pub use owned_variant::*;
 
 mod framing_offset_size;
 mod framing_offsets;
 
 mod container_depths;
 
-pub mod as_value;
+pub mod as_variant;
 
-// The derive codegen shared with zbus 6 (`zbus_utils`) names the value types and the
-// `as_value` module after zbus's `Variant`, `OwnedVariant` and `as_variant`.
-#[doc(hidden)]
-pub type Variant<'a> = Value<'a>;
-#[doc(hidden)]
-pub type OwnedVariant = OwnedValue;
-#[doc(hidden)]
-pub use as_value as as_variant;
+/// Deprecated alias of [`as_variant`], kept for code written against zgvariant 1.x.
+#[deprecated(since = "2.0.0", note = "renamed to `as_variant`")]
+pub mod as_value {
+    pub use crate::as_variant::*;
+}
 
-pub use zgvariant_derive::{DeserializeDict, OwnedValue, SerializeDict, Type, Value, signature};
+pub use zgvariant_derive::{
+    DeserializeDict, OwnedVariant, SerializeDict, Type, Variant, signature,
+};
+
+// Kept for code written against zgvariant 1.x, where these derives were named `Value` and
+// `OwnedValue`. A re-export can't carry a deprecation, so these are not marked as deprecated.
+pub use zgvariant_derive::{OwnedVariant as OwnedValue, Variant as Value};
 
 // Required for the macros to function within this crate.
 extern crate self as zgvariant;

@@ -1,4 +1,4 @@
-use zgvariant::{LE, Type, Value, serialized::Context, to_bytes};
+use zgvariant::{LE, Type, Variant, serialized::Context, to_bytes};
 
 #[test]
 fn roundtrip_option_through_maybe() {
@@ -13,8 +13,8 @@ fn roundtrip_option_through_maybe() {
 #[test]
 fn roundtrip_value_with_maybe() {
     let ctxt = Context::new(LE, 0);
-    let value = Value::from(Some(7i64));
+    let value = Variant::from(Some(7i64));
     let encoded = to_bytes(ctxt, &value).unwrap();
-    let (decoded, _): (Value<'_>, _) = encoded.deserialize().unwrap();
+    let (decoded, _): (Variant<'_>, _) = encoded.deserialize().unwrap();
     assert_eq!(decoded, value);
 }
